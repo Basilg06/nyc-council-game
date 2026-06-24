@@ -470,10 +470,11 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
   }, []);
 
   useEffect(() => {
+    if (!answered) return;
     setChoicesReady(false);
     const t = setTimeout(() => setChoicesReady(true), turn.lines.length * 1200 + 600);
     return () => clearTimeout(t);
-  }, [turnIdx]);
+  }, [turnIdx, answered]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
