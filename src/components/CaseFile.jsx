@@ -30,10 +30,6 @@ function OverviewTab({ state }) {
   return (
     <>
       <div style={styles.cfSection}>
-        <div style={styles.cfLabel}>Citywide Approval</div>
-        <Gauge value={state.approval} />
-      </div>
-      <div style={styles.cfSection}>
         <div style={styles.cfLabel}>Budget</div>
         <div style={styles.ledgerLine}>
           <span style={{ ...styles.ledgerNum, color: state.resources.budget < 0 ? "#8B1A1A" : "#2D5C3E" }}>
