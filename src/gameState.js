@@ -43,6 +43,8 @@ export const initialState = {
     soldAirRights: false,
     endorsedGov: null,
     govWinner: null,
+    backedTisch: false,
+    requestedTischPlan: false,
   },
   council: buildCouncil(),
   influence: {
