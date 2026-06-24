@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SCENES } from "./data/scenes";
 import { initialState } from "./gameState";
+import { CHARACTERS } from "./data/characters";
 import TopBar from "./components/TopBar";
 import DistrictMap from "./components/DistrictMap";
 import SeatArc from "./components/SeatArc";
@@ -37,6 +38,7 @@ export default function App() {
   const isChamber = scene?.type === "chamber_action";
   const isTimePass = scene?.type === "time_pass";
   const isHub = scene?.type === "hub";
+  const isPhoneCall = scene?.type === "phone_call";
 
   const majorityCount = state.council.filter(
     (m) => !["republican", "farRight"].includes(m.faction)
@@ -78,9 +80,13 @@ export default function App() {
         {isHub && (
           <HubMapOverlay scene={scene} goTo={goTo} updateState={updateState} isMobile={isMobile} />
         )}
+
+        {isPhoneCall && (
+          <PhoneCallPanel key={sceneId} scene={scene} state={state} goTo={goTo} isMobile={isMobile} />
+        )}
       </div>
 
-      {!isChamber && !isTimePass && !isHub && (
+      {!isChamber && !isTimePass && !isHub && !isPhoneCall && (
         <div style={styles.sceneOverlay}>
           <div style={styles.sceneOverlayInner}>
             <SceneView state={state} sceneId={sceneId} goTo={goTo} updateState={updateState} />
@@ -358,7 +364,7 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
     <div style={isMobile ? {
       position: "absolute", bottom: 16, left: 16, right: 16,
       zIndex: 16,
-      background: "rgba(5,8,14,0.92)",
+      background: "rgba(5,8,14,0.94)",
       border: "1px solid #1E3050",
       borderRadius: 4,
       padding: "14px 16px",
@@ -366,24 +372,24 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
     } : {
       position: "absolute", top: "50%", left: 18,
       transform: "translateY(-50%)",
-      width: 210, zIndex: 16,
-      background: "rgba(5,8,14,0.88)",
+      width: 270, zIndex: 16,
+      background: "rgba(5,8,14,0.94)",
       border: "1px solid #1E3050",
       borderRadius: 4,
-      padding: "20px 18px",
-      display: "flex", flexDirection: "column", gap: 14,
+      padding: "26px 22px",
+      display: "flex", flexDirection: "column", gap: 16,
     }}>
       {!isMobile && (
         <div style={{
           fontFamily: "'Space Mono', monospace",
-          fontSize: 8, color: "#4A7FA5",
-          letterSpacing: "0.18em", textTransform: "uppercase",
-          marginBottom: 4,
+          fontSize: 9, color: "#4A7FA5",
+          letterSpacing: "0.2em", textTransform: "uppercase",
+          marginBottom: 2,
         }}>
           IN SESSION
         </div>
       )}
-      <div style={{ fontSize: 12, color: "#A09888", lineHeight: 1.55, flex: isMobile ? 1 : undefined }}>
+      <div style={{ fontSize: 15, color: "#C8C0A8", lineHeight: 1.65, flex: isMobile ? 1 : undefined }}>
         {scene.prompt}
       </div>
       <button
@@ -393,7 +399,7 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
           fontSize: 10, fontWeight: 700,
           background: "#1C3050", color: "#7BBFE8",
           border: "1px solid #2E5080",
-          padding: "9px 14px", borderRadius: 3,
+          padding: "11px 14px", borderRadius: 3,
           cursor: "pointer", letterSpacing: "0.1em",
           whiteSpace: "nowrap",
           ...(isMobile ? {} : { width: "100%" }),
@@ -401,6 +407,108 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
       >
         {scene.buttonText} →
       </button>
+    </div>
+  );
+}
+
+function PhoneCallPanel({ scene, state, goTo, isMobile }) {
+  const [answered, setAnswered] = useState(false);
+  const [chosen, setChosen] = useState(null);
+  const c = CHARACTERS[scene.speaker];
+  const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
+
+  function pick(ch) {
+    setChosen(ch);
+  }
+
+  const ringingStyle = isMobile ? {
+    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16,
+    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+  } : {
+    position: "absolute", top: "50%", left: 18, transform: "translateY(-50%)",
+    width: 270, zIndex: 16,
+    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+  };
+  const answeredStyle = isMobile ? {
+    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16,
+    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+  } : {
+    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+    width: 640, zIndex: 16,
+    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+  };
+
+  if (!answered) {
+    return (
+      <div style={ringingStyle}>
+        <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}} @keyframes cfRing{0%,100%{transform:scale(1)}40%,60%{transform:scale(1.06)}}`}</style>
+        <div style={{ borderTop: `3px solid ${c.color}`, borderRadius: "4px 4px 0 0" }} />
+        <div style={{ padding: "26px 22px", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          {c.avatar ? (
+            <img src={c.avatar} alt="" style={{ width: 72, height: 72, imageRendering: "pixelated", borderRadius: 3, animation: "cfRing 1.6s ease-in-out infinite" }} />
+          ) : (
+            <div style={{ width: 72, height: 72, borderRadius: 3, background: c.color, opacity: 0.2, animation: "cfRing 1.6s ease-in-out infinite" }} />
+          )}
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#E8E4D8", marginBottom: 6 }}>{c.name}</div>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: c.color, opacity: 0.8, letterSpacing: "0.12em", textTransform: "uppercase" }}>{c.role}</div>
+          </div>
+          <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 4 }}>
+            <button onClick={() => setAnswered(true)} style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "#1C4A2E", color: "#6DBF8A", border: "1px solid #2A6A40", padding: "13px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
+              ANSWER
+            </button>
+            {scene.decline && (
+              <button onClick={() => goTo(scene.decline.next, scene.decline.effect)} style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "transparent", color: "#6A3030", border: "1px solid #3A1E1E", padding: "13px 18px", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
+                DECLINE
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={answeredStyle}>
+      <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
+      <div style={{ background: "#050810", borderBottom: "1px solid #1A2535", borderLeft: `3px solid ${c.color}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderRadius: "4px 4px 0 0" }}>
+        {c.avatar && <img src={c.avatar} alt="" style={{ width: 32, height: 32, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />}
+        <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: "#E8E4D8" }}>{c.name}</div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: c.color, opacity: 0.7, letterSpacing: "0.14em" }}>
+          IN CALL
+        </div>
+      </div>
+      <div style={{ padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {scene.lines.map((l, i) => {
+          const text = typeof l === "function" ? l(state) : l;
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+              {i === 0 && c.avatar ? <img src={c.avatar} alt="" style={{ width: 24, height: 24, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} /> : <div style={{ width: 24, flexShrink: 0 }} />}
+              <div style={{ background: "#0E1520", border: "1px solid #1A2535", borderRadius: "2px 8px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#C8C2B4", lineHeight: 1.6 }}>{text}</div>
+            </div>
+          );
+        })}
+        {chosen && (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ background: "#142038", border: "1px solid #1E3A5A", borderRadius: "8px 2px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#7BBFE8", lineHeight: 1.6, maxWidth: "85%" }}>{chosen.text}</div>
+          </div>
+        )}
+      </div>
+      {!chosen ? (
+        <div style={{ padding: "4px 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {choices.map((ch, i) => (
+            <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55 }}>
+              <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 11 }}>§</span>{ch.text}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div style={{ padding: "4px 14px 14px" }}>
+          <button onClick={() => goTo(chosen.next, chosen.effect)} style={{ width: "100%", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", padding: "11px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.1em" }}>
+            CONTINUE →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
