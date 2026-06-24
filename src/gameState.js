@@ -8,7 +8,7 @@ export const initialState = {
     hochul:  { name: "Gov. Kathy Hochul",        role: "Governor — Democrat",              color: "#2E3F8F", approval: 40, popularity: 55 },
     trump:   { name: "Pres. Donald Trump",        role: "President — Far-Right Republican", color: "#B5402E", approval: 20, popularity: 28 },
     speaker: { name: "Speaker — TBD",             role: "NYC Council Speaker",              color: "#888888", approval: 50, popularity: 50 },
-    tisch:   { name: "Comm. Jessica Tisch",       role: "NYPD Police Commissioner",         color: "#2E5A5A", approval: 50, popularity: 54 },
+    tisch:   { name: "Comm. Jessica Tisch",       role: "NYPD Police Commissioner",         color: "#D9C76B", approval: 50, popularity: 54 },
   },
   groups: {
     openNY:          { name: "Open NY",                     color: "#5B7FE0", approval: 52 },
