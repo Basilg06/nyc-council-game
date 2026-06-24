@@ -132,6 +132,15 @@ export const SCENES = {
 
   call_trump: {
     type: "phone_call", speaker: "trump",
+    decline: {
+      next: "call_tisch",
+      effect: (s) => {
+        s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 10);
+        s.factionApproval.dsa        = Math.min(100, s.factionApproval.dsa        + 6);
+        s.factionApproval.progressive= Math.min(100, s.factionApproval.progressive+ 5);
+        s.factionApproval.republican = Math.max(0,   s.factionApproval.republican - 4);
+      },
+    },
     lines: [
       "Mayor — big win. Big win. New York City, you know, I built a lot there. I know that city better than anybody.",
       "I want to work with you. I tried with de Blasio, total disaster. But you seem like someone who gets it. You understand the city needs to be safe, it needs to work.",
