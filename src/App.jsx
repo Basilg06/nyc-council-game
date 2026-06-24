@@ -36,10 +36,24 @@ function useIsMobile() {
   return mobile;
 }
 
+const SAVE_KEY = "cg_save";
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export default function App() {
-  const [state, setState] = useState(initialState);
-  const [sceneId, setSceneId] = useState("intro");
+  const saved = loadSave();
+  const [state, setState] = useState(saved ? { ...initialState, ...saved.state } : initialState);
+  const [sceneId, setSceneId] = useState(saved?.sceneId ?? "intro");
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ state, sceneId })); } catch {}
+  }, [state, sceneId]);
 
   function goTo(id, effect) {
     if (effect) setState((prev) => { const next = structuredClone(prev); effect(next); return next; });
@@ -48,6 +62,12 @@ export default function App() {
 
   function updateState(effect) {
     setState((prev) => { const next = structuredClone(prev); effect(next); return next; });
+  }
+
+  function newGame() {
+    localStorage.removeItem(SAVE_KEY);
+    setState(initialState);
+    setSceneId("intro");
   }
 
   const scene = SCENES[sceneId];
@@ -63,7 +83,7 @@ export default function App() {
 
   return (
     <div style={styles.appShell}>
-      <TopBar month={state.monthLabel} monthNum={state.month} />
+      <TopBar month={state.monthLabel} monthNum={state.month} onNewGame={newGame} />
 
       <div style={styles.mapStage}>
         <DistrictMap council={state.council} />
