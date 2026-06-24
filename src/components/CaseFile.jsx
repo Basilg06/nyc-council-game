@@ -102,7 +102,7 @@ function FigureRow({ fig }) {
         <span style={{ width: 3, height: 28, background: fig.color, borderRadius: 2, flexShrink: 0 }} />
         <div>
           <div style={{ fontSize: 11.5, fontWeight: 700, color: "#E8E4D8", lineHeight: 1.2 }}>{fig.name}</div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#888", marginTop: 1 }}>{fig.role}</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, color: "#888", marginTop: 1 }}>{fig.role}</div>
         </div>
       </div>
       <div style={{ paddingLeft: 9 }}>
@@ -131,7 +131,7 @@ function MiniBar({ label, value, color }) {
       <div style={styles.miniBarTrack}>
         <div style={{ ...styles.miniBarFill, width: `${Math.max(0, Math.min(100, value))}%`, background: color }} />
       </div>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#888", width: 24, textAlign: "right", flexShrink: 0 }}>{value}%</span>
+      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, color: "#888", width: 24, textAlign: "right", flexShrink: 0 }}>{value}%</span>
     </div>
   );
 }

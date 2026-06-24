@@ -132,7 +132,7 @@ function TimePassOverlay({ scene, goTo, updateState }) {
       }}
     >
       <div style={{
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'Space Mono', monospace",
         fontSize: 10, color: "#4A7FA5",
         letterSpacing: "0.25em", textTransform: "uppercase",
         marginBottom: 10, opacity: 0.8,
@@ -148,7 +148,7 @@ function TimePassOverlay({ scene, goTo, updateState }) {
         {current}
       </div>
       <div style={{
-        marginTop: 32, fontFamily: "'JetBrains Mono', monospace",
+        marginTop: 32, fontFamily: "'Space Mono', monospace",
         fontSize: 9, color: "#444", letterSpacing: "0.15em",
       }}>
         click to skip
@@ -206,7 +206,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
                 <circle cx={x} cy={y} r={dotR} fill={ringColor} opacity={blocked ? 0.25 : 0.85} style={{ pointerEvents: "none" }} />
               )}
               <text x={x} y={y + 30} textAnchor="middle" fontSize="9" fill={ringColor}
-                    fontFamily="'JetBrains Mono', monospace" letterSpacing="0.04em" style={{ pointerEvents: "none" }}>
+                    fontFamily="'Space Mono', monospace" letterSpacing="0.04em" style={{ pointerEvents: "none" }}>
                 {name}
               </text>
             </g>
@@ -235,7 +235,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
             }}
           >
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Space Mono', monospace",
               fontSize: 8.5, color: "#4A7FA5",
               letterSpacing: "0.18em", textTransform: "uppercase",
               marginBottom: 8,
@@ -253,7 +253,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
                 onClick={confirm}
                 style={{
                   flex: 1,
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+                  fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
                   background: "#162A14", color: "#8DB87A",
                   border: "1px solid #2A4A28",
                   padding: "9px 0", borderRadius: 3, cursor: "pointer",
@@ -265,7 +265,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
               <button
                 onClick={() => setPending(null)}
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                  fontFamily: "'Space Mono', monospace", fontSize: 10,
                   background: "transparent", color: "#555",
                   border: "1px solid #1E1E1E",
                   padding: "9px 16px", borderRadius: 3, cursor: "pointer",
@@ -300,7 +300,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
         {!isMobile && (
           <div>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Space Mono', monospace",
               fontSize: 8, color: "#4A7FA5",
               letterSpacing: "0.18em", textTransform: "uppercase",
               marginBottom: 7,
@@ -308,7 +308,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
               CITY HALL
             </div>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Space Mono', monospace",
               fontSize: 8, color: "#2E5080",
               letterSpacing: "0.12em", textTransform: "uppercase",
               marginBottom: 10,
@@ -321,7 +321,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
           </div>
         )}
         <div style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Space Mono', monospace",
           fontSize: 9,
           color: slotsLeft > 0 ? "#8DB87A" : "#3A3A3A",
           letterSpacing: "0.06em",
@@ -334,7 +334,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
         <button
           onClick={() => slotsLeft === 0 && goTo(scene.next, scene.nextEffect ?? null)}
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'Space Mono', monospace",
             fontSize: 10, fontWeight: 700,
             background: slotsLeft > 0 ? "#101820" : "#1C3050",
             color: slotsLeft > 0 ? "#2A4A5A" : "#7BBFE8",
@@ -375,7 +375,7 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
     }}>
       {!isMobile && (
         <div style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Space Mono', monospace",
           fontSize: 8, color: "#4A7FA5",
           letterSpacing: "0.18em", textTransform: "uppercase",
           marginBottom: 4,
@@ -389,7 +389,7 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
       <button
         onClick={() => goTo(scene.next, scene.effect)}
         style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Space Mono', monospace",
           fontSize: 10, fontWeight: 700,
           background: "#1C3050", color: "#7BBFE8",
           border: "1px solid #2E5080",

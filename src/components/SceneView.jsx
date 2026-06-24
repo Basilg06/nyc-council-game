@@ -60,7 +60,7 @@ function PhoneCallScene({ scene, state, goTo }) {
           )}
         </div>
         <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
+          fontFamily: "'Space Mono', monospace", fontSize: 8,
           color: "#4A7FA5", letterSpacing: "0.22em", textTransform: "uppercase",
           marginBottom: 10, display: "flex", alignItems: "center", gap: 7,
         }}>
@@ -71,11 +71,11 @@ function PhoneCallScene({ scene, state, goTo }) {
           INCOMING CALL
         </div>
         <div style={{ fontSize: 20, fontWeight: 700, color: "#E8E4D8", textAlign: "center", marginBottom: 5 }}>{c.name}</div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#444", marginBottom: 32 }}>{c.role}</div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#444", marginBottom: 32 }}>{c.role}</div>
         <button
           onClick={() => setAnswered(true)}
           style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+            fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
             background: "#1C4A2E", color: "#6DBF8A",
             border: "1px solid #2A6A40",
             padding: "11px 40px", borderRadius: 3,
@@ -116,7 +116,7 @@ function PhoneCallChat({ c, scene, state, choices, goTo }) {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#E8E4D8" }}>{c.name}</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, color: "#4A7FA5", letterSpacing: "0.14em" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "'Space Mono', monospace", fontSize: 7.5, color: "#4A7FA5", letterSpacing: "0.14em" }}>
           <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite" }} />
           IN CALL
         </div>
@@ -170,14 +170,14 @@ function PhoneCallChat({ c, scene, state, choices, goTo }) {
               key={i}
               onClick={() => pick(ch)}
               style={{
-                textAlign: "left", fontFamily: "'Source Serif Pro', Georgia, serif",
+                textAlign: "left", fontFamily: "'Lora', Georgia, serif",
                 fontSize: 12.5, color: "#A09888",
                 background: "#0C1219", border: "1px solid #1A2535",
                 borderRadius: 4, padding: "10px 14px",
                 cursor: "pointer", lineHeight: 1.5,
               }}
             >
-              <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }}>§</span>
+              <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 10 }}>§</span>
               {ch.text}
             </button>
           ))}
@@ -329,9 +329,9 @@ function WhipScene({ scene, state, goTo, updateState }) {
       </div>
 
       <div style={{ padding: "16px 24px 12px", borderBottom: "1px solid #E5DFCC" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.12em", color: "#888", marginBottom: 4 }}>VOTES COMMITTED</div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9.5, letterSpacing: "0.12em", color: "#888", marginBottom: 4 }}>VOTES COMMITTED</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 700, fontSize: 40, lineHeight: 1, color: isShort ? "#8B1A1A" : "#2D5C3E" }}>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontWeight: 700, fontSize: 40, lineHeight: 1, color: isShort ? "#8B1A1A" : "#2D5C3E" }}>
             {committed}
           </span>
           <span style={{ fontSize: 15, color: "#999" }}>/ {scene.needed} needed</span>
@@ -380,19 +380,19 @@ function GroupRow({ group, status, onNegotiate }) {
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", borderBottom: "1px solid #F0EDE0", opacity: isUnavailable ? 0.45 : 1 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: "#3D3D3D", lineHeight: 1.2 }}>{group.name}</div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, color: "#999", marginTop: 2 }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9.5, color: "#999", marginTop: 2 }}>
           {group.votes} vote{group.votes !== 1 ? "s" : ""}{subtext}
         </div>
       </div>
       {status === "pending" ? (
         <button
           onClick={onNegotiate}
-          style={{ flexShrink: 0, background: "#1C2B4A", color: "#FFFDF8", border: "none", borderRadius: 3, padding: "6px 12px", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.07em", cursor: "pointer" }}
+          style={{ flexShrink: 0, background: "#1C2B4A", color: "#FFFDF8", border: "none", borderRadius: 3, padding: "6px 12px", fontFamily: "'Space Mono', monospace", fontSize: 9, letterSpacing: "0.07em", cursor: "pointer" }}
         >
           NEGOTIATE →
         </button>
       ) : (
-        <span style={{ flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.08em", color: STATUS_COLOR[status], fontWeight: 700 }}>
+        <span style={{ flexShrink: 0, fontFamily: "'Space Mono', monospace", fontSize: 9.5, letterSpacing: "0.08em", color: STATUS_COLOR[status], fontWeight: 700 }}>
           {STATUS_LABEL[status]}
         </span>
       )}
@@ -423,7 +423,7 @@ function BudgetRoundScene({ scene, state, goTo }) {
         <div style={styles.speakerName}>{scene.title}</div>
         <div style={{ ...styles.speakerRole, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>BUDGET FIGHT</span>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: state.resources.budget < 0 ? "#E88" : "#8E8" }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, color: state.resources.budget < 0 ? "#E88" : "#8E8" }}>
             {state.resources.budget > 0 ? "+" : ""}{state.resources.budget} pts
           </span>
         </div>
@@ -484,7 +484,7 @@ function BudgetOption({ opt, delta, available, active, reason, onSelect }) {
         opacity: available ? 1 : 0.38,
       }}
     >
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 15, color: active ? "#FFFDF8" : deltaColor, flexShrink: 0, width: 32, textAlign: "right", paddingTop: 1 }}>
+      <div style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 15, color: active ? "#FFFDF8" : deltaColor, flexShrink: 0, width: 32, textAlign: "right", paddingTop: 1 }}>
         {deltaStr}
       </div>
       <div style={{ flex: 1 }}>
@@ -523,7 +523,7 @@ function GroupNeg({ group, state, updateState, onBack }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button
             onClick={onBack}
-            style={{ flexShrink: 0, background: "transparent", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 3, color: "#FFFDF8", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: "3px 8px", cursor: "pointer", letterSpacing: "0.06em" }}
+            style={{ flexShrink: 0, background: "transparent", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 3, color: "#FFFDF8", fontFamily: "'Space Mono', monospace", fontSize: 9, padding: "3px 8px", cursor: "pointer", letterSpacing: "0.06em" }}
           >
             ← BACK
           </button>
@@ -593,7 +593,7 @@ function HubScene({ scene, state, goTo, updateState }) {
   return (
     <div style={{ ...styles.sceneCard, background: "#0D1117", border: "1px solid #1E2D3D" }}>
       <div style={{ padding: "18px 20px 10px", borderBottom: "1px solid #1E2D3D" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#4A7FA5", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#4A7FA5", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
           CITY HALL — {scene.month}
         </div>
         <div style={{ fontSize: 13, color: "#C8C0A8", lineHeight: 1.5 }}>{scene.headline}</div>
@@ -601,10 +601,10 @@ function HubScene({ scene, state, goTo, updateState }) {
 
       <div style={{ padding: "12px 20px 4px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#4A7FA5", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#4A7FA5", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             Available meetings
           </span>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: slotsLeft > 0 ? "#8DB87A" : "#666" }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: slotsLeft > 0 ? "#8DB87A" : "#666" }}>
             {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining
           </span>
         </div>

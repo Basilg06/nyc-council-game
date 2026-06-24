@@ -80,10 +80,10 @@ export default function SeatArc({ council, highlightKey }) {
           return (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: f.color, flexShrink: 0 }} />
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#888", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, color: "#888", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {f.name}
               </span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#C8C4B8", flexShrink: 0 }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, color: "#C8C4B8", flexShrink: 0 }}>
                 {FACTION_COUNTS[k]}
               </span>
             </div>
