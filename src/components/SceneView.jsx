@@ -25,7 +25,7 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
     return <HubScene scene={scene} state={state} goTo={goTo} updateState={updateState} />;
   }
   if (scene.type === "phone_call") {
-    return <PhoneCallScene scene={scene} state={state} goTo={goTo} />;
+    return <PhoneCallScene key={sceneId} scene={scene} state={state} goTo={goTo} />;
   }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
 }
