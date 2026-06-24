@@ -31,41 +31,98 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
 }
 
 function PhoneCallScene({ scene, state, goTo }) {
+  const [answered, setAnswered] = useState(false);
   const c = CHARACTERS[scene.speaker];
   const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
+
+  if (!answered) {
+    return (
+      <div style={{
+        ...styles.sceneCard, background: "#070B12",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        minHeight: 340, gap: 0, padding: "40px 28px",
+      }}>
+        <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}} @keyframes cfRing{0%,100%{transform:scale(1)}40%,60%{transform:scale(1.06)}}`}</style>
+        <div style={{ marginBottom: 22 }}>
+          {c.avatar ? (
+            <img src={c.avatar} alt="" style={{
+              width: 88, height: 88, imageRendering: "pixelated",
+              borderRadius: 4, display: "block",
+              animation: "cfRing 1.6s ease-in-out infinite",
+            }} />
+          ) : (
+            <div style={{
+              width: 88, height: 88, borderRadius: 4,
+              background: c.color, opacity: 0.25,
+              animation: "cfRing 1.6s ease-in-out infinite",
+            }} />
+          )}
+        </div>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
+          color: "#4A7FA5", letterSpacing: "0.22em", textTransform: "uppercase",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 7,
+        }}>
+          <span style={{
+            display: "inline-block", width: 6, height: 6, borderRadius: "50%",
+            background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite",
+          }} />
+          INCOMING CALL
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "#E8E4D8", textAlign: "center", marginBottom: 5 }}>{c.name}</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#444", marginBottom: 32 }}>{c.role}</div>
+        <button
+          onClick={() => setAnswered(true)}
+          style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+            background: "#1C4A2E", color: "#6DBF8A",
+            border: "1px solid #2A6A40",
+            padding: "11px 40px", borderRadius: 3,
+            cursor: "pointer", letterSpacing: "0.14em",
+          }}
+        >
+          ANSWER
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.sceneCard}>
       <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
       <div style={{
         background: "#060A10", borderBottom: "1px solid #1A2535",
-        padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
+        padding: "11px 16px", display: "flex", alignItems: "center", gap: 10,
       }}>
-        {c.avatar && (
-          <img src={c.avatar} alt="" style={{
-            width: 52, height: 52, imageRendering: "pixelated",
-            flexShrink: 0, borderRadius: 2,
-          }} />
+        {c.avatar ? (
+          <img src={c.avatar} alt="" style={{ width: 36, height: 36, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />
+        ) : (
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#E8E4D8" }}>{c.name}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
-            color: "#4A7FA5", letterSpacing: "0.2em", textTransform: "uppercase",
-            marginBottom: 5, display: "flex", alignItems: "center", gap: 6,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5,
+            color: "#4A7FA5", letterSpacing: "0.16em", marginTop: 2,
+            display: "flex", alignItems: "center", gap: 5,
           }}>
             <span style={{
-              display: "inline-block", width: 6, height: 6, borderRadius: "50%",
+              display: "inline-block", width: 5, height: 5, borderRadius: "50%",
               background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite",
             }} />
-            INCOMING CALL
+            IN CALL
           </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#E8E4D8", lineHeight: 1.2 }}>{c.name}</div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#555", marginTop: 3 }}>{c.role}</div>
         </div>
       </div>
-      <div style={styles.transcriptText}>
+      <div style={{ ...styles.transcriptText, borderLeft: "none" }}>
         {scene.lines.map((l, i) => {
           const text = typeof l === "function" ? l(state) : l;
-          return <p key={i} style={styles.line}>{text}</p>;
+          return (
+            <p key={i} style={{ ...styles.line, borderLeft: `2px solid ${c.color}55`, paddingLeft: 14, marginLeft: 2 }}>
+              {text}
+            </p>
+          );
         })}
       </div>
       <div style={styles.choiceList}>
