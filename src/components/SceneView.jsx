@@ -73,6 +73,18 @@ function PhoneCallScene({ scene, state, goTo }) {
         <div style={{ fontSize: 20, fontWeight: 700, color: "#E8E4D8", textAlign: "center", marginBottom: 5 }}>{c.name}</div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#444", marginBottom: 32 }}>{c.role}</div>
         <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={() => setAnswered(true)}
+            style={{
+              fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
+              background: "#1C4A2E", color: "#6DBF8A",
+              border: "1px solid #2A6A40",
+              padding: "11px 40px", borderRadius: 3,
+              cursor: "pointer", letterSpacing: "0.14em",
+            }}
+          >
+            ANSWER
+          </button>
           {scene.decline && (
             <button
               onClick={() => goTo(scene.decline.next, scene.decline.effect)}
@@ -87,18 +99,6 @@ function PhoneCallScene({ scene, state, goTo }) {
               DECLINE
             </button>
           )}
-          <button
-            onClick={() => setAnswered(true)}
-            style={{
-              fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
-              background: "#1C4A2E", color: "#6DBF8A",
-              border: "1px solid #2A6A40",
-              padding: "11px 40px", borderRadius: 3,
-              cursor: "pointer", letterSpacing: "0.14em",
-            }}
-          >
-            ANSWER
-          </button>
         </div>
       </div>
     );
