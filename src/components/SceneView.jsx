@@ -88,50 +88,101 @@ function PhoneCallScene({ scene, state, goTo }) {
     );
   }
 
+  return <PhoneCallChat c={c} scene={scene} state={state} choices={choices} goTo={goTo} />;
+}
+
+function PhoneCallChat({ c, scene, state, choices, goTo }) {
+  const [chosen, setChosen] = useState(null);
+
+  function pick(ch) {
+    setChosen(ch);
+    setTimeout(() => goTo(ch.next, ch.effect), 650);
+  }
+
   return (
-    <div style={styles.sceneCard}>
+    <div style={{ ...styles.sceneCard, background: "#070B12" }}>
       <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
+
+      {/* Compact header */}
       <div style={{
-        background: "#060A10", borderBottom: "1px solid #1A2535",
-        padding: "11px 16px", display: "flex", alignItems: "center", gap: 10,
+        background: "#050810", borderBottom: "1px solid #141E2A",
+        padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
       }}>
         {c.avatar ? (
-          <img src={c.avatar} alt="" style={{ width: 36, height: 36, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />
+          <img src={c.avatar} alt="" style={{ width: 30, height: 30, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />
         ) : (
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
         )}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#E8E4D8" }}>{c.name}</div>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5,
-            color: "#4A7FA5", letterSpacing: "0.16em", marginTop: 2,
-            display: "flex", alignItems: "center", gap: 5,
-          }}>
-            <span style={{
-              display: "inline-block", width: 5, height: 5, borderRadius: "50%",
-              background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite",
-            }} />
-            IN CALL
-          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, color: "#4A7FA5", letterSpacing: "0.14em" }}>
+          <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite" }} />
+          IN CALL
         </div>
       </div>
-      <div style={{ ...styles.transcriptText, borderLeft: "none" }}>
+
+      {/* Chat chain */}
+      <div style={{ padding: "18px 16px 10px", display: "flex", flexDirection: "column", gap: 10 }}>
         {scene.lines.map((l, i) => {
           const text = typeof l === "function" ? l(state) : l;
           return (
-            <p key={i} style={{ ...styles.line, borderLeft: `2px solid ${c.color}55`, paddingLeft: 14, marginLeft: 2 }}>
-              {text}
-            </p>
+            <div key={i} style={{ display: "flex", alignItems: "flex-end", gap: 9 }}>
+              {c.avatar ? (
+                i === 0
+                  ? <img src={c.avatar} alt="" style={{ width: 28, height: 28, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />
+                  : <div style={{ width: 28, flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 28, flexShrink: 0 }} />
+              )}
+              <div style={{
+                background: "#0E1520", border: "1px solid #1A2535",
+                borderRadius: "3px 10px 10px 10px",
+                padding: "10px 14px", maxWidth: "82%",
+                fontSize: 13, color: "#C8C2B4", lineHeight: 1.6,
+              }}>
+                {text}
+              </div>
+            </div>
           );
         })}
+
+        {/* Player response bubble */}
+        {chosen && (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{
+              background: "#142038", border: "1px solid #1E3A5A",
+              borderRadius: "10px 3px 10px 10px",
+              padding: "10px 14px", maxWidth: "78%",
+              fontSize: 13, color: "#7BBFE8", lineHeight: 1.6,
+            }}>
+              {chosen.text}
+            </div>
+          </div>
+        )}
       </div>
-      <div style={styles.choiceList}>
-        {choices.map((ch, i) => (
-          <button key={i} style={styles.choiceBtn} onClick={() => goTo(ch.next, ch.effect)}>
-            <span style={styles.choiceMark}>§</span> {ch.text}
-          </button>
-        ))}
-      </div>
+
+      {/* Response options */}
+      {!chosen && (
+        <div style={{ padding: "8px 16px 20px", display: "flex", flexDirection: "column", gap: 7 }}>
+          {choices.map((ch, i) => (
+            <button
+              key={i}
+              onClick={() => pick(ch)}
+              style={{
+                textAlign: "left", fontFamily: "'Source Serif Pro', Georgia, serif",
+                fontSize: 12.5, color: "#A09888",
+                background: "#0C1219", border: "1px solid #1A2535",
+                borderRadius: 4, padding: "10px 14px",
+                cursor: "pointer", lineHeight: 1.5,
+              }}
+            >
+              <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }}>§</span>
+              {ch.text}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
