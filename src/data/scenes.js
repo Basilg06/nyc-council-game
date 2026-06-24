@@ -141,39 +141,38 @@ export const SCENES = {
         s.factionApproval.republican = Math.max(0,   s.factionApproval.republican - 4);
       },
     },
-    lines: [
-      "Mayor — big win. Big win. New York City, you know, I built a lot there. I know that city better than anybody.",
-      "I want to work with you. I tried with de Blasio, total disaster. But you seem like someone who gets it. You understand the city needs to be safe, it needs to work.",
-      "I just need to know: are we going to be friends, or are we going to be doing this the hard way?",
-    ],
-    choices: [
+    turns: [
       {
-        text: "\"We can find common ground on public safety.\"",
-        next: "call_tisch",
-        effect: (s) => {
-          s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 8);
-          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 5);
-          s.factionApproval.republican = Math.min(100, s.factionApproval.republican + 5);
-          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 6);
-          s.factionApproval.progressive = Math.max(0, s.factionApproval.progressive - 4);
-        },
+        lines: ['"Congrats."'],
+        choices: [
+          {
+            text: '"Thank you Mr. President!"',
+            effect: (s) => { s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 4); },
+          },
+          { text: '"..."' },
+        ],
       },
       {
-        text: "\"New York will make its own decisions, Mr. President.\"",
-        next: "call_tisch",
-        effect: (s) => {
-          s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 5);
-          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 6);
-          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 5);
-          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 5);
-        },
+        lines: [
+          '"This is where I\'m from, I\'m sure you know."',
+          '"I spent a long long time here."',
+        ],
+        choices: [
+          {
+            text: '"Of course Mr. President. It\'s the best city in the world."',
+            effect: (s) => {
+              s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 4);
+              s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+            },
+          },
+          { text: '"..."' },
+        ],
       },
       {
-        text: "\"I appreciate the call, Mr. President.\"",
-        next: "call_tisch",
-        effect: (s) => {
-          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
-        },
+        lines: ['"So don\'t fuck it up."'],
+        choices: [
+          { text: '"..."', next: "call_tisch" },
+        ],
       },
     ],
   },
@@ -188,7 +187,7 @@ export const SCENES = {
     choices: [
       {
         text: "\"Let's get a briefing on the calendar this week.\"",
-        next: "month1_brief",
+        next: "swearing_in_week",
         effect: (s) => {
           s.flags.metTisch = true;
           s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 6);
@@ -197,14 +196,14 @@ export const SCENES = {
       },
       {
         text: "\"Send the document. I'll read it.\"",
-        next: "month1_brief",
+        next: "swearing_in_week",
         effect: (s) => {
           s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 2);
         },
       },
       {
         text: "\"Where does the PBA stand on your reform plan?\"",
-        next: "month1_brief",
+        next: "swearing_in_week",
         effect: (s) => {
           s.flags.askedAboutPBA = true;
           s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 4);
@@ -212,6 +211,13 @@ export const SCENES = {
         },
       },
     ],
+  },
+
+  swearing_in_week: {
+    type: "time_pass",
+    months: ["January"],
+    year: "2026",
+    next: "month1_brief",
   },
 
   month1_brief: {
@@ -473,7 +479,7 @@ export const SCENES = {
     type: "chamber_action",
     prompt: "January — you stepped back. The Council will sort it out.",
     buttonText: "Advance to the vote", next: "vote_scene",
-    effect: (s) => { s.month = 3; s.monthLabel = "March"; s.flags.stayedNeutral = true; },
+    effect: (s) => { s.flags.stayedNeutral = true; },
   },
 
   vote_scene: {
@@ -501,7 +507,7 @@ export const SCENES = {
     choices: [
       { text: "Call the vote.", next: "epilogue",
         effect: (s) => {
-          s.month = 4; s.monthLabel = "April";
+          s.month = 2; s.monthLabel = "February";
           const gs = s.flags.groupStatus || {};
           const meninVotes  = s.flags.backedMenin
             ? 22 + (gs.repub === "won" ? 5 : 0) + (gs.prog_cross === "won" ? 4 : 0)
@@ -592,7 +598,7 @@ export const SCENES = {
       {
         id: "press_conf",
         label: "Hold a press conference",
-        location: { x: 404, y: 432, name: "City Hall" },
+        location: { x: 404, y: 432, name: "City Hall", },
         description: "Take a public position on the transit funding fight. Builds goodwill citywide, costs you with the establishment.",
         effect: (s) => {
           s.approval = Math.min(100, s.approval + 3);
@@ -604,7 +610,7 @@ export const SCENES = {
       {
         id: "biz_roundtable",
         label: "Business roundtable",
-        location: { x: 456, y: 295, name: "Midtown" },
+        location: { x: 456, y: 295, name: "Midtown", },
         description: "Quarterly meeting with the BID coalition and Chamber of Commerce. Useful before the budget fight.",
         effect: (s) => {
           s.groups.smallBusiness.approval = Math.min(100, s.groups.smallBusiness.approval + 8);
@@ -615,7 +621,7 @@ export const SCENES = {
       {
         id: "tenant_rally",
         label: "Tenant rights rally",
-        location: { x: 540, y: 215, name: "South Bronx" },
+        location: { x: 540, y: 215, name: "South Bronx", },
         description: "Show up for the housing coalition. Signals where you stand on rent ahead of budget negotiations.",
         effect: (s) => {
           s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 8);
@@ -627,7 +633,7 @@ export const SCENES = {
       {
         id: "pba_ceremony",
         label: "NYPD promotion ceremony",
-        location: { x: 210, y: 638, name: "Staten Island" },
+        location: { x: 210, y: 638, name: "Staten Island", },
         description: "Attend the quarterly promotion event. PBA notices who shows up and who doesn't.",
         effect: (s) => {
           s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 8);
@@ -639,7 +645,7 @@ export const SCENES = {
       {
         id: "transit_tour",
         label: "Subway accessibility tour",
-        location: { x: 672, y: 392, name: "Flushing, Queens" },
+        location: { x: 672, y: 392, name: "Flushing, Queens", },
         description: "Ride the MTA with Open NY activists. Good press in transit-dependent districts.",
         effect: (s) => {
           s.groups.openNY.approval = Math.min(100, s.groups.openNY.approval + 8);

@@ -9,7 +9,6 @@ export default function TopBar({ month, monthNum }) {
         <div style={styles.topBarSub}>City of New York — Executive Session</div>
       </div>
       <div style={styles.monthChip}>
-        <div style={styles.monthChipLabel}>MONTH {monthNum}</div>
         <div style={styles.monthChipName}>{month}</div>
       </div>
     </div>

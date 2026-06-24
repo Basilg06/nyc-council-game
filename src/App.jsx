@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SCENES } from "./data/scenes";
 import { initialState } from "./gameState";
 import { CHARACTERS } from "./data/characters";
@@ -9,6 +9,22 @@ import Legend from "./components/Legend";
 import CaseFile from "./components/CaseFile";
 import SceneView from "./components/SceneView";
 import styles from "./styles";
+
+function useDrag() {
+  const [pos, setPos] = useState(null);
+  const ref = useRef(null);
+  function onMouseDown(e) {
+    e.preventDefault();
+    const rect = ref.current.getBoundingClientRect();
+    const parentRect = ref.current.offsetParent.getBoundingClientRect();
+    const origin = { mx: e.clientX, my: e.clientY, px: rect.left - parentRect.left, py: rect.top - parentRect.top };
+    function onMove(e) { setPos({ x: origin.px + e.clientX - origin.mx, y: origin.py + e.clientY - origin.my }); }
+    function onUp() { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+  return { pos, ref, onMouseDown };
+}
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(window.innerWidth < 640);
@@ -82,7 +98,7 @@ export default function App() {
         )}
 
         {isPhoneCall && (
-          <PhoneCallPanel key={sceneId} scene={scene} state={state} goTo={goTo} isMobile={isMobile} />
+          <PhoneCallPanel key={sceneId} scene={scene} state={state} goTo={goTo} updateState={updateState} isMobile={isMobile} />
         )}
       </div>
 
@@ -93,20 +109,27 @@ export default function App() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
 
 function TimePassOverlay({ scene, goTo, updateState }) {
+  const [started, setStarted] = useState(false);
   const [idx, setIdx] = useState(0);
   const months = scene.months;
   const done = idx >= months.length;
 
-  useEffect(() => {
-    setIdx(0);
-  }, [scene]);
+  const MONTH_NUMS = { January:1,February:2,March:3,April:4,May:5,June:6,July:7,August:8,September:9,October:10,November:11,December:12 };
 
   useEffect(() => {
+    if (!started || done) return;
+    const m = months[idx];
+    if (MONTH_NUMS[m]) updateState((s) => { s.month = MONTH_NUMS[m]; s.monthLabel = m; });
+  }, [idx, started]);
+
+  useEffect(() => {
+    if (!started) return;
     if (done) {
       const t = setTimeout(() => {
         if (scene.nextEffect) updateState(scene.nextEffect);
@@ -116,7 +139,11 @@ function TimePassOverlay({ scene, goTo, updateState }) {
     }
     const t = setTimeout(() => setIdx((i) => i + 1), 700);
     return () => clearTimeout(t);
-  }, [idx, done]);
+  }, [idx, done, started]);
+
+  function advance() {
+    setStarted(true);
+  }
 
   function skip() {
     if (scene.nextEffect) updateState(scene.nextEffect);
@@ -124,6 +151,32 @@ function TimePassOverlay({ scene, goTo, updateState }) {
   }
 
   const current = months[Math.min(idx, months.length - 1)];
+
+  if (!started) {
+    return (
+      <div style={{
+        position: "absolute", top: "50%", left: 18,
+        transform: "translateY(-50%)",
+        width: 270, zIndex: 20,
+        background: "rgba(5,8,14,0.94)", border: "1px solid #1E3050", borderRadius: 4,
+        padding: "26px 22px",
+        display: "flex", flexDirection: "column", gap: 16,
+        userSelect: "none",
+      }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#4A7FA5", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+          {scene.year}
+        </div>
+        <button onClick={advance} style={{
+          fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
+          background: "#1C3050", color: "#7BBFE8",
+          border: "1px solid #2E5080", borderRadius: 3,
+          padding: "11px 14px", cursor: "pointer", letterSpacing: "0.1em", width: "100%",
+        }}>
+          ADVANCE TIME →
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -166,6 +219,8 @@ function TimePassOverlay({ scene, goTo, updateState }) {
 function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
   const [taken, setTaken] = useState([]);
   const [pending, setPending] = useState(null);
+  const infoDrag = useDrag();
+  const confirmDrag = useDrag();
   const slotsLeft = scene.maxActions - taken.length;
   const pinR = isMobile ? 20 : 14;
   const dotR = isMobile ? 6 : 4;
@@ -179,7 +234,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
   }
 
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 15 }}>
+    <div style={{ position: "absolute", inset: 0, zIndex: 15, pointerEvents: "none" }}>
       {/* dim + pins — same viewBox as DistrictMap so coords align */}
       <svg
         viewBox="0 0 900 900"
@@ -199,8 +254,9 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
           return (
             <g
               key={action.id}
-              onClick={() => !done && !blocked && !pending && setPending(action)}
-              style={{ cursor: done || blocked || pending ? "default" : "pointer", pointerEvents: "all" }}
+              onClick={() => !done && !blocked && setPending(action)}
+
+              style={{ cursor: done || blocked ? "default" : "pointer", pointerEvents: "all" }}
             >
               {isPending && (
                 <circle cx={x} cy={y} r={pulseR} fill="none" stroke="#4A9FD4" strokeWidth={1.5} opacity={0.5} />
@@ -223,93 +279,73 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
       {/* Confirmation popup */}
       {pending && (
         <div
-          onClick={() => setPending(null)}
-          style={{
-            position: "absolute", inset: 0, zIndex: 20,
-            display: "flex", alignItems: "center", justifyContent: "center",
+          ref={confirmDrag.ref}
+          style={confirmDrag.pos ? {
+            position: "absolute", left: confirmDrag.pos.x, top: confirmDrag.pos.y, zIndex: 20,
+            background: "#0A1422", border: "1px solid #2E5080", borderRadius: 4,
+            width: 300, boxShadow: "0 6px 40px rgba(0,0,0,0.7)", pointerEvents: "auto",
+          } : {
+            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 20,
+            background: "#0A1422", border: "1px solid #2E5080", borderRadius: 4,
+            width: 300, boxShadow: "0 6px 40px rgba(0,0,0,0.7)", pointerEvents: "auto",
           }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#0A1422",
-              border: "1px solid #2E5080",
-              borderRadius: 4,
-              padding: "22px 26px",
-              maxWidth: 340, width: "88%",
-              boxShadow: "0 6px 40px rgba(0,0,0,0.7)",
-            }}
-          >
-            <div style={{
+            <div onMouseDown={confirmDrag.onMouseDown} style={{
               fontFamily: "'Space Mono', monospace",
               fontSize: 8.5, color: "#4A7FA5",
               letterSpacing: "0.18em", textTransform: "uppercase",
-              marginBottom: 8,
+              padding: "14px 22px 0",
+              cursor: "grab", userSelect: "none",
             }}>
               {pending.location.name}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#E8E4D8", marginBottom: 10, lineHeight: 1.3 }}>
-              {pending.label}
+            <div style={{ padding: "10px 22px 22px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#E8E4D8", marginBottom: 10, lineHeight: 1.3 }}>
+                {pending.label}
+              </div>
+              <div style={{ fontSize: 12, color: "#887870", lineHeight: 1.55, marginBottom: 20 }}>
+                {pending.description}
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={confirm} style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#162A14", color: "#8DB87A", border: "1px solid #2A4A28", padding: "9px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.08em" }}>
+                  Confirm →
+                </button>
+                <button onClick={() => setPending(null)} style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, background: "transparent", color: "#555", border: "1px solid #1E1E1E", padding: "9px 16px", borderRadius: 3, cursor: "pointer" }}>
+                  ✕
+                </button>
+              </div>
             </div>
-            <div style={{ fontSize: 12, color: "#887870", lineHeight: 1.55, marginBottom: 20 }}>
-              {pending.description}
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={confirm}
-                style={{
-                  flex: 1,
-                  fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
-                  background: "#162A14", color: "#8DB87A",
-                  border: "1px solid #2A4A28",
-                  padding: "9px 0", borderRadius: 3, cursor: "pointer",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                Confirm →
-              </button>
-              <button
-                onClick={() => setPending(null)}
-                style={{
-                  fontFamily: "'Space Mono', monospace", fontSize: 10,
-                  background: "transparent", color: "#555",
-                  border: "1px solid #1E1E1E",
-                  padding: "9px 16px", borderRadius: 3, cursor: "pointer",
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
       {/* Info panel — left on desktop, bottom on mobile */}
-      <div style={isMobile ? {
+      <div ref={infoDrag.ref} style={isMobile ? {
         position: "absolute", bottom: 16, left: 16, right: 16,
-        zIndex: 16,
-        background: "rgba(5,8,14,0.92)",
-        border: "1px solid #1E3050",
-        borderRadius: 4,
+        zIndex: 16, pointerEvents: "auto",
+        background: "rgba(5,8,14,0.92)", border: "1px solid #1E3050", borderRadius: 4,
         padding: "14px 16px",
         display: "flex", flexDirection: "row", alignItems: "center", gap: 12,
+      } : infoDrag.pos ? {
+        position: "absolute", left: infoDrag.pos.x, top: infoDrag.pos.y,
+        width: 210, zIndex: 16, pointerEvents: "auto",
+        background: "rgba(5,8,14,0.88)", border: "1px solid #1E3050", borderRadius: 4,
+        padding: "20px 18px",
+        display: "flex", flexDirection: "column", gap: 14,
       } : {
         position: "absolute", top: "50%", left: 18,
         transform: "translateY(-50%)",
-        width: 210, zIndex: 16,
-        background: "rgba(5,8,14,0.88)",
-        border: "1px solid #1E3050",
-        borderRadius: 4,
+        width: 210, zIndex: 16, pointerEvents: "auto",
+        background: "rgba(5,8,14,0.88)", border: "1px solid #1E3050", borderRadius: 4,
         padding: "20px 18px",
         display: "flex", flexDirection: "column", gap: 14,
       }}>
         {!isMobile && (
           <div>
-            <div style={{
+            <div onMouseDown={infoDrag.onMouseDown} style={{
               fontFamily: "'Space Mono', monospace",
               fontSize: 8, color: "#4A7FA5",
               letterSpacing: "0.18em", textTransform: "uppercase",
-              marginBottom: 7,
+              marginBottom: 7, cursor: "grab", userSelect: "none",
             }}>
               CITY HALL
             </div>
@@ -360,31 +396,32 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
 }
 
 function ChamberActionBar({ scene, goTo, isMobile }) {
+  const { pos, ref, onMouseDown } = useDrag();
+  const base = { background: "rgba(5,8,14,0.94)", border: "1px solid #1E3050", borderRadius: 4 };
   return (
-    <div style={isMobile ? {
+    <div ref={ref} style={isMobile ? {
       position: "absolute", bottom: 16, left: 16, right: 16,
-      zIndex: 16,
-      background: "rgba(5,8,14,0.94)",
-      border: "1px solid #1E3050",
-      borderRadius: 4,
+      zIndex: 16, ...base,
       padding: "14px 16px",
       display: "flex", flexDirection: "row", alignItems: "center", gap: 12,
+    } : pos ? {
+      position: "absolute", left: pos.x, top: pos.y,
+      width: 270, zIndex: 16, ...base,
+      padding: "26px 22px",
+      display: "flex", flexDirection: "column", gap: 16,
     } : {
       position: "absolute", top: "50%", left: 18,
       transform: "translateY(-50%)",
-      width: 270, zIndex: 16,
-      background: "rgba(5,8,14,0.94)",
-      border: "1px solid #1E3050",
-      borderRadius: 4,
+      width: 270, zIndex: 16, ...base,
       padding: "26px 22px",
       display: "flex", flexDirection: "column", gap: 16,
     }}>
       {!isMobile && (
-        <div style={{
+        <div onMouseDown={onMouseDown} style={{
           fontFamily: "'Space Mono', monospace",
           fontSize: 9, color: "#4A7FA5",
           letterSpacing: "0.2em", textTransform: "uppercase",
-          marginBottom: 2,
+          marginBottom: 2, cursor: "grab", userSelect: "none",
         }}>
           IN SESSION
         </div>
@@ -411,38 +448,66 @@ function ChamberActionBar({ scene, goTo, isMobile }) {
   );
 }
 
-function PhoneCallPanel({ scene, state, goTo, isMobile }) {
+function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
+  const [visible, setVisible] = useState(false);
   const [answered, setAnswered] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [turnIdx, setTurnIdx] = useState(0);
   const [chosen, setChosen] = useState(null);
+  const { pos, ref: panelRef, onMouseDown: onHeaderMouseDown } = useDrag();
+  const scrollRef = useRef(null);
   const c = CHARACTERS[scene.speaker];
-  const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
+
+  const turns = scene.turns || [{ lines: scene.lines, choices: scene.choices }];
+  const turn = turns[turnIdx];
+  const choices = (turn.choices || []).filter((ch) => !ch.show || ch.show(state));
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 1600);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [history, chosen, turnIdx]);
 
   function pick(ch) {
+    if (ch.effect) updateState(ch.effect);
     setChosen(ch);
+    if (!ch.next) {
+      setTimeout(() => {
+        setHistory((h) => [...h, { lines: turn.lines, response: ch.text }]);
+        setTurnIdx((t) => t + 1);
+        setChosen(null);
+      }, 900);
+    }
   }
 
+  if (!visible) return null;
+
+  const baseStyle = { background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4 };
   const ringingStyle = isMobile ? {
-    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16,
-    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16, ...baseStyle,
+  } : pos ? {
+    position: "absolute", left: pos.x, top: pos.y, width: 270, zIndex: 16, ...baseStyle,
   } : {
     position: "absolute", top: "50%", left: 18, transform: "translateY(-50%)",
-    width: 270, zIndex: 16,
-    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+    width: 270, zIndex: 16, ...baseStyle,
   };
   const answeredStyle = isMobile ? {
-    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16,
-    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16, ...baseStyle,
+  } : pos ? {
+    position: "absolute", left: pos.x, top: pos.y, width: 640, zIndex: 16, ...baseStyle,
   } : {
     position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-    width: 640, zIndex: 16,
-    background: "rgba(5,8,14,0.96)", border: "1px solid #1E3050", borderRadius: 4,
+    width: 640, zIndex: 16, ...baseStyle,
   };
 
   if (!answered) {
     return (
-      <div style={ringingStyle}>
+      <div ref={panelRef} style={ringingStyle}>
         <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}} @keyframes cfRing{0%,100%{transform:scale(1)}40%,60%{transform:scale(1.06)}}`}</style>
-        <div style={{ borderTop: `3px solid ${c.color}`, borderRadius: "4px 4px 0 0" }} />
+        <div onMouseDown={onHeaderMouseDown} style={{ borderTop: `3px solid ${c.color}`, borderRadius: "4px 4px 0 0", cursor: "grab", height: 6 }} />
         <div style={{ padding: "26px 22px", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           {c.avatar ? (
             <img src={c.avatar} alt="" style={{ width: 72, height: 72, imageRendering: "pixelated", borderRadius: 3, animation: "cfRing 1.6s ease-in-out infinite" }} />
@@ -469,45 +534,62 @@ function PhoneCallPanel({ scene, state, goTo, isMobile }) {
   }
 
   return (
-    <div style={answeredStyle}>
-      <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
-      <div style={{ background: "#050810", borderBottom: "1px solid #1A2535", borderLeft: `3px solid ${c.color}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderRadius: "4px 4px 0 0" }}>
+    <div ref={panelRef} style={answeredStyle}>
+      <style>{`@keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}} .cf-scroll::-webkit-scrollbar{width:4px} .cf-scroll::-webkit-scrollbar-track{background:transparent} .cf-scroll::-webkit-scrollbar-thumb{background:#1E3050;border-radius:2px} .cf-scroll{scrollbar-width:thin;scrollbar-color:#1E3050 transparent}`}</style>
+      <div onMouseDown={onHeaderMouseDown} style={{ background: "#050810", borderBottom: "1px solid #1A2535", borderLeft: `3px solid ${c.color}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderRadius: "4px 4px 0 0", cursor: "grab", userSelect: "none" }}>
         {c.avatar && <img src={c.avatar} alt="" style={{ width: 32, height: 32, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} />}
         <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: "#E8E4D8" }}>{c.name}</div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: c.color, opacity: 0.7, letterSpacing: "0.14em" }}>
-          IN CALL
-        </div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: c.color, opacity: 0.7, letterSpacing: "0.14em" }}>IN CALL</div>
       </div>
-      <div style={{ padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 8 }}>
-        {scene.lines.map((l, i) => {
-          const text = typeof l === "function" ? l(state) : l;
-          return (
-            <div key={i} style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-              {i === 0 && c.avatar ? <img src={c.avatar} alt="" style={{ width: 24, height: 24, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} /> : <div style={{ width: 24, flexShrink: 0 }} />}
-              <div style={{ background: "#0E1520", border: "1px solid #1A2535", borderRadius: "2px 8px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#C8C2B4", lineHeight: 1.6 }}>{text}</div>
+
+      <div ref={scrollRef} className="cf-scroll" style={{ padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 8, height: 300, overflowY: "auto", justifyContent: "flex-end" }}>
+        {/* past turns */}
+        {history.map((h, hi) => (
+          <div key={hi}>
+            {h.lines.map((l, li) => (
+              <div key={li} style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 8 }}>
+                {li === 0 && c.avatar ? <img src={c.avatar} alt="" style={{ width: 24, height: 24, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} /> : <div style={{ width: 24, flexShrink: 0 }} />}
+                <div style={{ background: "#0E1520", border: "1px solid #1A2535", borderRadius: "2px 8px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#C8C2B4", lineHeight: 1.6 }}>{typeof l === "function" ? l(state) : l}</div>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <div style={{ background: "#142038", border: "1px solid #1E3A5A", borderRadius: "8px 2px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#7BBFE8", lineHeight: 1.6, maxWidth: "85%" }}>{h.response}</div>
             </div>
-          );
-        })}
+          </div>
+        ))}
+
+        {/* current turn caller lines */}
+        {turn.lines.map((l, i) => (
+          <div key={`${turnIdx}-${i}`} style={{ display: "flex", alignItems: "flex-end", gap: 8, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 550}ms` }}>
+            {i === 0 && c.avatar ? <img src={c.avatar} alt="" style={{ width: 24, height: 24, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} /> : <div style={{ width: 24, flexShrink: 0 }} />}
+            <div style={{ background: "#0E1520", border: "1px solid #1A2535", borderRadius: "2px 8px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#C8C2B4", lineHeight: 1.6 }}>{typeof l === "function" ? l(state) : l}</div>
+          </div>
+        ))}
+
+        {/* chosen response for current turn */}
         {chosen && (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", animation: "fadeSlideUp 0.3s ease both" }}>
             <div style={{ background: "#142038", border: "1px solid #1E3A5A", borderRadius: "8px 2px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#7BBFE8", lineHeight: 1.6, maxWidth: "85%" }}>{chosen.text}</div>
           </div>
         )}
       </div>
+
       {!chosen ? (
         <div style={{ padding: "4px 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
           {choices.map((ch, i) => (
-            <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55 }}>
+            <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${(turn.lines.length * 550) + i * 180}ms` }}>
               <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 11 }}>§</span>{ch.text}
             </button>
           ))}
         </div>
-      ) : (
+      ) : chosen.next ? (
         <div style={{ padding: "4px 14px 14px" }}>
           <button onClick={() => goTo(chosen.next, chosen.effect)} style={{ width: "100%", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", padding: "11px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.1em" }}>
             CONTINUE →
           </button>
         </div>
+      ) : (
+        <div style={{ padding: "4px 14px 14px", minHeight: 56 }} />
       )}
     </div>
   );
