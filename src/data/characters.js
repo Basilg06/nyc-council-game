@@ -3,4 +3,5 @@ export const CHARACTERS = {
   hochul: { name: "Governor Kathy Hochul",        role: "State of New York",                        color: "#8B1A1A" },
   carr:   { name: "David Carr",                   role: "Republican Council Member, Staten Island",  color: "#B5402E" },
   tisch:  { name: "Commissioner Jessica Tisch",   role: "NYPD Police Commissioner",                 color: "#D9C76B" },
+  trump:  { name: "Pres. Donald Trump",           role: "President of the United States",           color: "#6E1F1F",  avatar: "/avatars/trump.png" },
 };

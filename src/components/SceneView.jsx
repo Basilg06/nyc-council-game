@@ -24,7 +24,59 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
   if (scene.type === "hub") {
     return <HubScene scene={scene} state={state} goTo={goTo} updateState={updateState} />;
   }
+  if (scene.type === "phone_call") {
+    return <PhoneCallScene scene={scene} state={state} goTo={goTo} />;
+  }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
+}
+
+function PhoneCallScene({ scene, state, goTo }) {
+  const c = CHARACTERS[scene.speaker];
+  const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
+  return (
+    <div style={styles.sceneCard}>
+      <style>{`@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
+      <div style={{
+        background: "#060A10", borderBottom: "1px solid #1A2535",
+        padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
+      }}>
+        {c.avatar && (
+          <img src={c.avatar} alt="" style={{
+            width: 52, height: 52, imageRendering: "pixelated",
+            flexShrink: 0, borderRadius: 2,
+          }} />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
+            color: "#4A7FA5", letterSpacing: "0.2em", textTransform: "uppercase",
+            marginBottom: 5, display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <span style={{
+              display: "inline-block", width: 6, height: 6, borderRadius: "50%",
+              background: "#4A9FD4", animation: "cfPulse 1.4s ease-in-out infinite",
+            }} />
+            INCOMING CALL
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#E8E4D8", lineHeight: 1.2 }}>{c.name}</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, color: "#555", marginTop: 3 }}>{c.role}</div>
+        </div>
+      </div>
+      <div style={styles.transcriptText}>
+        {scene.lines.map((l, i) => {
+          const text = typeof l === "function" ? l(state) : l;
+          return <p key={i} style={styles.line}>{text}</p>;
+        })}
+      </div>
+      <div style={styles.choiceList}>
+        {choices.map((ch, i) => (
+          <button key={i} style={styles.choiceBtn} onClick={() => goTo(ch.next, ch.effect)}>
+            <span style={styles.choiceMark}>§</span> {ch.text}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function DialogueScene({ scene, state, goTo }) {

@@ -89,7 +89,120 @@ export const SCENES = {
   intro: {
     type: "chamber_action",
     prompt: "January 2026 — You have just been sworn in as Mayor of New York City.",
-    buttonText: "Enter the Mayor's Office", next: "month1_brief",
+    buttonText: "Enter the Mayor's Office", next: "call_hochul",
+  },
+
+  call_hochul: {
+    type: "phone_call", speaker: "hochul",
+    lines: [
+      "Mayor — congratulations. New York City made the right call.",
+      "I want to make sure we start this relationship right. The state has real capacity to help the city on housing, transit, mental health services. That capacity flows when Albany and City Hall are aligned.",
+      "I'd like to get on the calendar in the next two weeks. There are things I'd rather discuss in person.",
+    ],
+    choices: [
+      {
+        text: "\"We're aligned. Set the meeting.\"",
+        next: "call_trump",
+        effect: (s) => {
+          s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 8);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 4);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+        },
+      },
+      {
+        text: "\"What are you looking for from the city?\"",
+        next: "call_trump",
+        effect: (s) => {
+          s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 3);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 4);
+        },
+      },
+      {
+        text: "\"I'll need Albany to move on housing vouchers first.\"",
+        next: "call_trump",
+        effect: (s) => {
+          s.figures.hochul.approval = Math.max(0, s.figures.hochul.approval - 4);
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 5);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 4);
+          s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 5);
+        },
+      },
+    ],
+  },
+
+  call_trump: {
+    type: "phone_call", speaker: "trump",
+    lines: [
+      "Mayor — big win. Big win. New York City, you know, I built a lot there. I know that city better than anybody.",
+      "I want to work with you. I tried with de Blasio, total disaster. But you seem like someone who gets it. You understand the city needs to be safe, it needs to work.",
+      "I just need to know: are we going to be friends, or are we going to be doing this the hard way?",
+    ],
+    choices: [
+      {
+        text: "\"We can find common ground on public safety.\"",
+        next: "call_tisch",
+        effect: (s) => {
+          s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 8);
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 5);
+          s.factionApproval.republican = Math.min(100, s.factionApproval.republican + 5);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 6);
+          s.factionApproval.progressive = Math.max(0, s.factionApproval.progressive - 4);
+        },
+      },
+      {
+        text: "\"New York will make its own decisions, Mr. President.\"",
+        next: "call_tisch",
+        effect: (s) => {
+          s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 5);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 6);
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 5);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 5);
+        },
+      },
+      {
+        text: "\"I appreciate the call, Mr. President.\"",
+        next: "call_tisch",
+        effect: (s) => {
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+        },
+      },
+    ],
+  },
+
+  call_tisch: {
+    type: "phone_call", speaker: "tisch",
+    lines: [
+      "Mayor, congratulations. I'll keep this short — I know your schedule today.",
+      "I've been Commissioner for four months. The department is stable. We have a reform agenda I believe is achievable, and I want to make sure we're on the same page before things get complicated.",
+      "I'll send over a briefing document. But I wanted you to know I'm ready to work.",
+    ],
+    choices: [
+      {
+        text: "\"Let's get a briefing on the calendar this week.\"",
+        next: "month1_brief",
+        effect: (s) => {
+          s.flags.metTisch = true;
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 6);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+        },
+      },
+      {
+        text: "\"Send the document. I'll read it.\"",
+        next: "month1_brief",
+        effect: (s) => {
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 2);
+        },
+      },
+      {
+        text: "\"Where does the PBA stand on your reform plan?\"",
+        next: "month1_brief",
+        effect: (s) => {
+          s.flags.askedAboutPBA = true;
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 4);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+        },
+      },
+    ],
   },
 
   month1_brief: {
