@@ -96,12 +96,12 @@ export const SCENES = {
     type: "phone_call", speaker: "hochul",
     lines: [
       "Mayor — congratulations. New York City made the right call.",
-      "I want to make sure we start this relationship right. The state has real capacity to help the city on housing, transit, mental health services. That capacity flows when Albany and City Hall are aligned.",
-      "I'd like to get on the calendar in the next two weeks. There are things I'd rather discuss in person.",
+      "I want to make sure we start this relationship right. The state has real capacity to help the city succeed. That capacity flows when Albany and City Hall are aligned. We've seen what happens when they aren't.",
+      "I wish you the best of luck.",
     ],
     choices: [
       {
-        text: "\"We're aligned. Set the meeting.\"",
+        text: "\"Appreciate the call Governor. Excited to be working with you.\"",
         next: "call_trump",
         effect: (s) => {
           s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 8);
@@ -110,7 +110,7 @@ export const SCENES = {
         },
       },
       {
-        text: "\"What are you looking for from the city?\"",
+        text: "\"Thank you. We will have a lot to discuss.\"",
         next: "call_trump",
         effect: (s) => {
           s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 3);
@@ -118,7 +118,7 @@ export const SCENES = {
         },
       },
       {
-        text: "\"I'll need Albany to move on housing vouchers first.\"",
+        text: "\"If NYC made the right call, where was your endorsement?\"",
         next: "call_trump",
         effect: (s) => {
           s.figures.hochul.approval = Math.max(0, s.figures.hochul.approval - 4);
@@ -155,7 +155,7 @@ export const SCENES = {
       {
         lines: [
           '"This is where I\'m from, I\'m sure you know."',
-          '"I spent a long long time here."',
+          '"I\'ve spent a long long time here."',
         ],
         choices: [
           {
@@ -180,13 +180,15 @@ export const SCENES = {
   call_tisch: {
     type: "phone_call", speaker: "tisch",
     lines: [
-      "Mayor, congratulations. I'll keep this short — I know your schedule today.",
-      "I've been Commissioner for four months. The department is stable. We have a reform agenda I believe is achievable, and I want to make sure we're on the same page before things get complicated.",
-      "I'll send over a briefing document. But I wanted you to know I'm ready to work.",
+      "Mayor, congratulations. I'll keep this short, I know your schedule today.",
+      "I'm the Police Commissioner. Crime is down, we have a reform agenda I believe is achievable, and I want to make sure we're on the same page before things get complicated.",
+      "This job is hard, and you need allies.",
+      "So if you swing,",
+      "don't miss."
     ],
     choices: [
       {
-        text: "\"Let's get a briefing on the calendar this week.\"",
+        text: "\"Understood....\"",
         next: "swearing_in_week",
         effect: (s) => {
           s.flags.metTisch = true;
@@ -195,21 +197,12 @@ export const SCENES = {
         },
       },
       {
-        text: "\"Send the document. I'll read it.\"",
+        text: "\"We'll see.\"",
         next: "swearing_in_week",
         effect: (s) => {
-          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 2);
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval - 3);
         },
-      },
-      {
-        text: "\"Where does the PBA stand on your reform plan?\"",
-        next: "swearing_in_week",
-        effect: (s) => {
-          s.flags.askedAboutPBA = true;
-          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 4);
-          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
-        },
-      },
+      }
     ],
   },
 

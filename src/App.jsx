@@ -454,6 +454,7 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
   const [history, setHistory] = useState([]);
   const [turnIdx, setTurnIdx] = useState(0);
   const [chosen, setChosen] = useState(null);
+  const [responseVisible, setResponseVisible] = useState(false);
   const { pos, ref: panelRef, onMouseDown: onHeaderMouseDown } = useDrag();
   const scrollRef = useRef(null);
   const c = CHARACTERS[scene.speaker];
@@ -461,11 +462,18 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
   const turns = scene.turns || [{ lines: scene.lines, choices: scene.choices }];
   const turn = turns[turnIdx];
   const choices = (turn.choices || []).filter((ch) => !ch.show || ch.show(state));
+  const [choicesReady, setChoicesReady] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 1600);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    setChoicesReady(false);
+    const t = setTimeout(() => setChoicesReady(true), turn.lines.length * 1200 + 600);
+    return () => clearTimeout(t);
+  }, [turnIdx]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -474,12 +482,15 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
   function pick(ch) {
     if (ch.effect) updateState(ch.effect);
     setChosen(ch);
+    setResponseVisible(false);
+    setTimeout(() => setResponseVisible(true), 500);
     if (!ch.next) {
       setTimeout(() => {
         setHistory((h) => [...h, { lines: turn.lines, response: ch.text }]);
         setTurnIdx((t) => t + 1);
         setChosen(null);
-      }, 900);
+        setResponseVisible(false);
+      }, 1600);
     }
   }
 
@@ -494,13 +505,14 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
     position: "absolute", top: "50%", left: 18, transform: "translateY(-50%)",
     width: 270, zIndex: 16, ...baseStyle,
   };
+  const answeredBase = { ...baseStyle, display: "flex", flexDirection: "column", height: 620 };
   const answeredStyle = isMobile ? {
-    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16, ...baseStyle,
+    position: "absolute", bottom: 16, left: 16, right: 16, zIndex: 16, ...answeredBase,
   } : pos ? {
-    position: "absolute", left: pos.x, top: pos.y, width: 640, zIndex: 16, ...baseStyle,
+    position: "absolute", left: pos.x, top: pos.y, width: 640, zIndex: 16, ...answeredBase,
   } : {
     position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-    width: 640, zIndex: 16, ...baseStyle,
+    width: 640, zIndex: 16, ...answeredBase,
   };
 
   if (!answered) {
@@ -542,7 +554,7 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: c.color, opacity: 0.7, letterSpacing: "0.14em" }}>IN CALL</div>
       </div>
 
-      <div ref={scrollRef} className="cf-scroll" style={{ padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 8, height: 300, overflowY: "auto", justifyContent: "flex-end" }}>
+      <div ref={scrollRef} className="cf-scroll" style={{ padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 8, flex: 1, overflowY: "auto" }}>
         {/* past turns */}
         {history.map((h, hi) => (
           <div key={hi}>
@@ -560,37 +572,32 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
 
         {/* current turn caller lines */}
         {turn.lines.map((l, i) => (
-          <div key={`${turnIdx}-${i}`} style={{ display: "flex", alignItems: "flex-end", gap: 8, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 550}ms` }}>
+          <div key={`${turnIdx}-${i}`} style={{ display: "flex", alignItems: "flex-end", gap: 8, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 1200}ms` }}>
             {i === 0 && c.avatar ? <img src={c.avatar} alt="" style={{ width: 24, height: 24, imageRendering: "pixelated", borderRadius: 2, flexShrink: 0 }} /> : <div style={{ width: 24, flexShrink: 0 }} />}
             <div style={{ background: "#0E1520", border: "1px solid #1A2535", borderRadius: "2px 8px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#C8C2B4", lineHeight: 1.6 }}>{typeof l === "function" ? l(state) : l}</div>
           </div>
         ))}
 
         {/* chosen response for current turn */}
-        {chosen && (
+        {chosen && responseVisible && (
           <div style={{ display: "flex", justifyContent: "flex-end", animation: "fadeSlideUp 0.3s ease both" }}>
             <div style={{ background: "#142038", border: "1px solid #1E3A5A", borderRadius: "8px 2px 8px 8px", padding: "10px 14px", fontSize: 15, color: "#7BBFE8", lineHeight: 1.6, maxWidth: "85%" }}>{chosen.text}</div>
           </div>
         )}
       </div>
 
-      {!chosen ? (
-        <div style={{ padding: "4px 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-          {choices.map((ch, i) => (
-            <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${(turn.lines.length * 550) + i * 180}ms` }}>
-              <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 11 }}>§</span>{ch.text}
-            </button>
-          ))}
-        </div>
-      ) : chosen.next ? (
-        <div style={{ padding: "4px 14px 14px" }}>
+      <div style={{ flexShrink: 0, minHeight: 160, padding: "4px 14px 14px", display: "flex", flexDirection: "column", gap: 8, justifyContent: "flex-end" }}>
+        {choicesReady && !chosen && choices.map((ch, i) => (
+          <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 120}ms` }}>
+            <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 11 }}>§</span>{ch.text}
+          </button>
+        ))}
+        {chosen && chosen.next && (
           <button onClick={() => goTo(chosen.next, chosen.effect)} style={{ width: "100%", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", padding: "11px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.1em" }}>
             CONTINUE →
           </button>
-        </div>
-      ) : (
-        <div style={{ padding: "4px 14px 14px", minHeight: 56 }} />
-      )}
+        )}
+      </div>
     </div>
   );
 }
