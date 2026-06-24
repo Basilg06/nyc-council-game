@@ -440,48 +440,7 @@ export const SCENES = {
       },
     ],
     choices: [
-      { text: "On to the budget.", next: "tisch_intro" },
-    ],
-  },
-
-  tisch_intro: {
-    type: "dialogue", speaker: "tisch",
-    lines: [
-      "Mr. Mayor. I've been running the department for three months. I want to tell you what I see before you hear it from someone else.",
-      "The PBA will push you on headcount. I'm not against hiring — I'm against hiring without a plan. We need the analytics infrastructure first. Body cameras on every officer. A real civilian review process with teeth.",
-      "The department can get safer and more effective at the same time. I've seen it done. But I need to know you're going to back me when the union pushes back.",
-    ],
-    choices: [
-      {
-        text: "\"You have my full support. Push the reforms.\"",
-        next: "hub_post_speaker",
-        effect: (s) => {
-          s.flags.backedTisch = true;
-          s.groups.pba.approval        = Math.max(0,   s.groups.pba.approval        - 5);
-          s.factionApproval.centrist   = Math.min(100, s.factionApproval.centrist   + 5);
-          s.factionApproval.progressive= Math.min(100, s.factionApproval.progressive+ 4);
-          s.factionApproval.dsa        = Math.min(100, s.factionApproval.dsa        + 3);
-        },
-      },
-      {
-        text: "\"We need the PBA onside for the budget. Don't move too fast.\"",
-        next: "hub_post_speaker",
-        effect: (s) => {
-          s.groups.pba.approval        = Math.min(100, s.groups.pba.approval        + 6);
-          s.factionApproval.centrist   = Math.min(100, s.factionApproval.centrist   + 4);
-          s.factionApproval.progressive= Math.max(0,   s.factionApproval.progressive- 3);
-          s.factionApproval.dsa        = Math.max(0,   s.factionApproval.dsa        - 4);
-        },
-      },
-      {
-        text: "\"Put the plan in writing. I want to see the numbers first.\"",
-        next: "hub_post_speaker",
-        effect: (s) => {
-          s.flags.requestedTischPlan = true;
-          s.factionApproval.centrist   = Math.min(100, s.factionApproval.centrist   + 3);
-          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2);
-        },
-      },
+      { text: "On to the budget.", next: "hub_post_speaker" },
     ],
   },
 
