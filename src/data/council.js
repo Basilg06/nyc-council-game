@@ -75,8 +75,8 @@ export const FACTION_COUNTS = Object.fromEntries(
 export function buildCouncil() {
   const members = REAL_COUNCIL.map((d) => ({ ...d, vote: null, named: false }));
   const meninSeat = members.find((m) => m.id === 5);
-  if (meninSeat) { meninSeat.name = "Menin (D5)"; meninSeat.named = true; meninSeat.key = "menin"; }
+  if (meninSeat) { meninSeat.name = "Julie Menin"; meninSeat.named = true; meninSeat.key = "menin"; }
   const hudsonSeat = members.find((m) => m.id === 35);
-  if (hudsonSeat) { hudsonSeat.name = "Hudson (D35)"; hudsonSeat.named = true; hudsonSeat.key = "hudson"; }
+  if (hudsonSeat) { hudsonSeat.name = "Crystal Hudson"; hudsonSeat.named = true; hudsonSeat.key = "hudson"; }
   return members;
 }
