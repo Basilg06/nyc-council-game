@@ -182,7 +182,8 @@ export function runCouncilElectionMut(s) {
     if (m.key === "menin" || m.key === "hudson") continue;
     flips.push({ id: m.id, from: m.faction, to: w, incumbent: m.name });
     m.faction = w;
-    m.name = NEW_MEMBER_POOL[m.id % NEW_MEMBER_POOL.length];
+    // Offset by flip order so simultaneous flips don't collide on a name.
+    m.name = NEW_MEMBER_POOL[(m.id + flips.length * 7) % NEW_MEMBER_POOL.length];
     m.named = false;
   }
   s.flags.election2027 = {

@@ -1,0 +1,60 @@
+# Council Game
+
+A political simulation of being Mayor of New York City. React + Vite, no backend — game state lives in memory and autosaves to `localStorage`.
+
+```bash
+npm install
+npm run dev
+```
+
+## Current content (demo)
+
+**Year One — 2026:** inauguration calls (Hochul, Trump, Tisch) → Speaker race (back Menin, Hudson, or Carr; whip votes bloc by bloc) → three-round budget fight → governor's primary and general (endorse and campaign).
+
+**Year Two — 2027:** a crisis that depends on your Year 1 budget (deferred capital → BQE collapse; otherwise a blizzard) → federal funding showdown with the White House → the Speaker calls in a favor → summer hub actions → October surprise scandal → **council elections across all 51 districts** → year-end report card.
+
+## Architecture
+
+Everything flows through `src/data/scenes.js` — a flat map of scene objects keyed by id. `App.jsx` renders the current scene by `type`:
+
+| type | renderer | notes |
+|---|---|---|
+| `dialogue` | SceneView → DialogueScene | `urgent: true` = red emergency header |
+| `phone_call` | App → PhoneCallPanel | ringing screen → draggable chat panel |
+| `whip_vote` | SceneView → WhipScene | per-bloc negotiation, offer chits |
+| `budget_round` | SceneView → BudgetRoundScene | one pick per round |
+| `hub` | App → HubMapOverlay | map pins, N of M actions |
+| `time_pass` | App → TimePassOverlay | ADVANCE TIME gate + month ticker |
+| `report` | SceneView → ReportScene | end-of-year report card |
+
+Scene conventions:
+- `lines` entries can be strings or `(state) => string` functions — use functions for anything that references earlier choices.
+- `choices` support `show(state)` (hidden when false), `available(state)` + `tooltip` (visible but disabled), `effect(state)` (mutates a `structuredClone` draft), and `next`.
+- Phone calls support `turns: [{ lines, choices }, ...]` for multi-exchange conversations in one panel. A choice **without** `next` advances to the next turn; a choice **with** `next` ends the call via CONTINUE. `speaker` can be a function of state (used for the sitting Speaker).
+- `decline` on a phone call adds a DECLINE button on the ringing screen.
+
+## The election engine (`src/data/elections.js`)
+
+Hidden from the player. Each district scores every faction:
+
+```
+score = factionApproval × factionInfluence
+      + Σ groups( approval × influence × affinity[group][faction] × salience[district][group] )
+      + 25 incumbency bonus
+```
+
+Highest score wins the seat. Inputs the player actually controls:
+- **Approvals** move with nearly every choice.
+- **Influence** (mobilization multipliers) moves with budget picks (`INFLUENCE_SHIFTS`, applied automatically in BudgetRoundScene), campaign-trail hub actions, and 2027 summer hub actions.
+
+`runCouncilElectionMut` recomputes all 51 seats on election night 2027, seats replacement members on flips, and stores a summary in `flags.election2027`. The district map and seat arc recolor automatically because they read `state.council`.
+
+## Other systems
+
+- **News wire** (`src/data/news.js` + `NewsTicker`): deterministic, state-reactive headlines at the bottom of the map. Add headlines by pushing onto the array in `getHeadlines` — loudest stories first, evergreen filler pads the tail.
+- **Autosave**: every state/scene change writes to `localStorage` (`cg_save`); NEW GAME in the top bar clears it. Saved state is spread over `initialState`, so adding new top-level fields is save-compatible.
+- **Consequence flags**: `flags.*` is the long-term memory — deferred budget tricks come back as crises, `owesHochul` gates endorsements, `speakerElected` + `backedX` set the temperature of later conversations. When adding content, prefer reading existing flags over adding parallel ones.
+
+## Roadmap (short version)
+
+Alpha: full Term 1 (2028 presidential cycle, 2029 re-election campaign), crisis pool expansion, council bill mechanic. Beta: Term 2, endings, legacy scoring. See the scene graph in `scenes.js` — the demo currently ends at `year2_report`.
