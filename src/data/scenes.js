@@ -245,6 +245,10 @@ export const SCENES = {
       "The Taylor Law makes striking illegal for uniformed officers — so officially, this isn't a strike. It's the flu. Meanwhile response time in Brownsville is forty-one minutes and the tabloids are doing live shots outside empty precinct houses.",
       "You fired their commissioner. This is the answer. How do you respond?",
     ],
+    consult: {
+      label: "ASK THE ROOM",
+      text: "The crackdown wins the argument and loses the department — Taylor Law penalties are real, and so are twenty years of grudges. Settling costs budget and face, but it's the only door that closes gently. Waiting costs the outer boroughs a week of 41-minute response times, and they vote. There's no good option here. Only cheaper ones.",
+    },
     choices: [
       {
         text: "Invoke the Taylor Law. Dock pay, suspend the organizers, terminate repeat no-shows.",
@@ -354,7 +358,7 @@ export const SCENES = {
       "Now — the Council still needs a Speaker, and that fight didn't pause for any of this.",
     ],
     choices: [
-      { text: "Back to work.", next: "swearing_in_week" },
+      { text: "Back to work.", next: "paper_strike" },
     ],
   },
 
@@ -373,6 +377,10 @@ export const SCENES = {
       "Menin has the establishment locked. Hudson has DSA and left-WFP. Neither has 26 yet.",
       "Who are you backing?",
     ],
+    consult: {
+      label: "ASK THE POLITICAL SHOP",
+      text: "Menin wins on math unless you move real weight — she starts at 22 of 26. Hudson needs both persuadable blocs; doable, but everything you offer comes out of your pocket. Carr is arithmetic dressed as a gamble — the establishment will never hand a Republican the gavel. And neutrality is free now, expensive later: whoever wins without you remembers winning without you.",
+    },
     choices: [
       { text: "Back Julie Menin.", next: "menin_whip",
         effect: (s) => { s.flags.backedMenin = true; adj(s, MENIN_FX); } },
@@ -713,7 +721,7 @@ export const SCENES = {
       },
     ],
     choices: [
-      { text: "On to the budget.", next: "hub_post_speaker" },
+      { text: "On to the budget.", next: "paper_speaker" },
     ],
   },
 
@@ -1223,7 +1231,7 @@ export const SCENES = {
       "But the calendar doesn't stop. June primary is six weeks out. Hochul needs to know where you stand.",
     ],
     choices: [
-      { text: "Look at the primary.", next: "hub_post_budget" },
+      { text: "Look at the primary.", next: "paper_budget" },
     ],
   },
 
@@ -1333,6 +1341,13 @@ export const SCENES = {
         ? "You called in that favor. Hochul's people are already expecting your endorsement — this isn't much of a decision."
         : "A mayoral endorsement moves precincts in this city. Who are you backing?",
     ],
+    consult: {
+      label: "ASK THE POLITICAL SHOP",
+      text: (s) => {
+        const wfpStrong = s.groups.wfp.approval >= 60;
+        return `Hochul survives on institutional weight unless WFP turnout is extraordinary${wfpStrong ? " — and right now it might be" : " — and right now it isn't"}. Delgado needs a machine behind him; yours would do. Salazar is a message, not a majority, unless you've spent two years building her one. Blakeman only wins if the Democrats bleed each other first. Your endorsement is worth exactly as much as the groups who'd carry it.`;
+      },
+    },
     choices: [
       {
         text: "Endorse Hochul.",
@@ -1478,7 +1493,7 @@ export const SCENES = {
     choices: [
       {
         text: "On to 2027.",
-        next: "time_to_2027",
+        next: "paper_gov",
         effect: (s) => { s.month = 11; s.monthLabel = "November"; },
       },
     ],
@@ -1534,6 +1549,10 @@ export const SCENES = {
       "The Post already has the memo. Their headline is one word: 'DEFERRED.'",
       "DOT says we have three options. None of them are good.",
     ],
+    consult: {
+      label: "ASK THE ROOM",
+      text: "The full repair reads as leadership and costs like it — four points you'll want in June. The patch saves money right up until it doesn't, and 'interim shoring' is a phrase that ends up in documentaries. Blaming Albany feels terrific for about a week, and the Governor's office has your deferral memo too.",
+    },
     choices: [
       {
         text: "Full emergency repair. Whatever it costs.",
@@ -1579,6 +1598,10 @@ export const SCENES = {
       "Every mayor gets one snowstorm. Lindsay never recovered from his. De Blasio got dragged for a golf-cart photo. This one is yours.",
       "OEM needs a posture in the next hour.",
     ],
+    consult: {
+      label: "ASK THE ROOM",
+      text: "Full mobilization is money you'll miss in June, but snow is the one thing voters grade in real time. Manhattan-first is what the last three administrations did — quietly, and two of them got away with it. The austerity option is how mayors become former mayors.",
+    },
     choices: [
       {
         text: "Full mobilization. Every plow, every borough, overtime unlimited.",
@@ -1936,6 +1959,10 @@ export const SCENES = {
       "Your Buildings Commissioner — your appointee — accepted Yankees playoff tickets and a $40,000 kitchen renovation from a developer with thirty-one open permits in front of his agency.",
       "Every council candidate in the city is being asked about it on camera. Whatever you do, do it before the six o'clock news.",
     ],
+    consult: {
+      label: "ASK THE ROOM",
+      text: "Fire him at a podium and the story dies by Tuesday — the establishment will call it a beheading, but they say that quietly. Stand by him and the story runs to Election Day with your name in every paragraph. The Friday-night resignation works right up until someone asks what else this building handles quietly.",
+    },
     choices: [
       {
         text: "Fire him. Today. Podium at four.",
@@ -2056,11 +2083,7 @@ export const SCENES = {
       },
     ],
     choices: [
-      {
-        text: "The year winds down.",
-        next: "federal_endgame",
-        effect: (s) => { s.month = 12; s.monthLabel = "December"; },
-      },
+      { text: "The year winds down.", next: "paper_election27" },
     ],
   },
 
@@ -2199,6 +2222,200 @@ export const SCENES = {
           s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
           s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 2);
         },
+      },
+    ],
+  },
+
+  // ═══════════════════════ THE NEW YORK LEDGER ═══════════════════════
+
+  paper_speaker: {
+    type: "newspaper",
+    next: "hub_post_speaker",
+    nextLabel: "BACK TO CITY HALL",
+    stories: [
+      {
+        headline: (s) => s.flags.speakerElected === "hudson"
+          ? "Hudson Takes the Gavel"
+          : "Menin Elected Speaker; Establishment Holds the Center",
+        body: (s) => {
+          const gs = s.flags.groupStatus || {};
+          if (s.flags.speakerElected === "hudson") {
+            const votes = 12 + (gs.prog_lib === "won" ? 12 : 0) + (gs.ctr_cross === "won" ? 4 : 0);
+            return `Crystal Hudson of Brooklyn was elected Speaker of the City Council yesterday, ${votes}–${51 - votes}, the first DSA-aligned member to hold the chamber's top post. The progressive wing, long a noisy minority, now controls the legislative calendar, committee assignments, and — as one member put it on background — "the thermostat." Establishment members left the chamber quickly.`;
+          }
+          const votes = s.flags.backedMenin
+            ? 22 + (gs.repub === "won" ? 5 : 0) + (gs.prog_cross === "won" ? 4 : 0)
+            : 22 + 4;
+          return `Julie Menin of Manhattan was elected Speaker yesterday, ${Math.max(votes, 26)}–${51 - Math.max(votes, 26)}, in a result that surprised no one who counts votes for a living. The establishment coalition held, the left made noise, and the Council's center of gravity remains exactly where it has been for a decade: somewhere east of the Speaker's office and north of controversy.`;
+        },
+      },
+      {
+        headline: (s) => {
+          if (s.flags.stayedNeutral) return "Mayor Sat Out the Speaker Fight — Aides Call It Strategy";
+          const won = (s.flags.backedHudson && s.flags.speakerElected === "hudson") || (s.flags.backedMenin && s.flags.speakerElected === "menin");
+          return won ? "Mayor's Early Bet Pays Off" : "City Hall Backed the Losing Horse";
+        },
+        body: (s) => {
+          if (s.flags.stayedNeutral) return "Whether standing back was discipline or indecision depends on which floor of City Hall you ask.";
+          const won = (s.flags.backedHudson && s.flags.speakerElected === "hudson") || (s.flags.backedMenin && s.flags.speakerElected === "menin");
+          return won
+            ? "The new Speaker's first call after the vote was to the second floor of City Hall. The second was to her scheduler."
+            : "The new Speaker's office declined to comment on the Mayor's role in the race, which is itself a comment.";
+        },
+      },
+      {
+        headline: (s) => s.flags.pushedCarr ? "The Carr Experiment Ends Quietly" : null,
+        body: () => "The Staten Island Republican's cross-aisle bid drew a mayoral push and little else. He withdrew before the floor vote.",
+      },
+    ],
+  },
+
+  paper_strike: {
+    type: "newspaper",
+    next: "swearing_in_week",
+    nextLabel: "THREE WEEKS TO THE SPEAKER VOTE",
+    stories: [
+      {
+        headline: (s) => {
+          if (s.flags.strike2026 === "crackdown") return "City Breaks 'Blue Flu' After 19 Days";
+          if (s.flags.strike2026 === "negotiated") return "Peace at a Price: Sick-Out Ends in Settlement";
+          return "The Flu Burns Out: NYPD Sick-Out Ends Without a Deal";
+        },
+        body: (s) => {
+          if (s.flags.strike2026 === "crackdown")
+            return `The largest police job action since 1971 collapsed yesterday under Taylor Law penalties that union lawyers called "vindictive" and City Hall called "the statute." Hundreds of termination letters stand. Patrol strength is back above ninety percent, and precinct locker rooms are papered with photocopies of the Mayor's statement, annotated. The department returned to work. Nobody at One Police Plaza claims it returned to normal.`;
+          if (s.flags.strike2026 === "negotiated")
+            return `The deal that ended the sick-out gives the PBA back pay, amnesty for participants, and — most consequentially — a formal seat on the panel that will choose the next Police Commissioner. City Hall calls it pragmatism. The tabloids call it tribute. Both descriptions fit the facts.`;
+          return `Eleven days after it began with a "bug going around" the four-eight, the sick-out simply stopped. No deal, no terminations, no resolution — just a department drifting back to work and a city that spent a week and a half timing ambulances. Nothing was settled, which both sides seem to regard as unfinished business.`;
+        },
+      },
+      {
+        headline: () => "Tisch, Out: 'I Said Don't Miss'",
+        body: () => "The former Commissioner's only public comment since her dismissal came outside her Upper East Side building, four words long, delivered without breaking stride. Her allies say she is 'weighing options.' Her enemies can't find any.",
+      },
+      {
+        headline: (s) => s.flags.strikeBomb ? "Warehouse Blast: No Arrests, Four Cases Gutted" : null,
+        body: (s) => {
+          if (s.flags.strikeBomb === "blamed") return "The Mayor's on-camera accusation against union leadership remains unmatched by charges. The PBA has framed it, literally — copies hang in every borough office.";
+          if (s.flags.strikeBomb === "federal") return "The FBI's takeover of the investigation was read at One Police Plaza as an insult and in Washington as an invitation.";
+          return "Investigators have released nothing. The evidence that burned included files in two corruption cases against terminated officers, a coincidence no one in the building believes.";
+        },
+      },
+    ],
+  },
+
+  paper_budget: {
+    type: "newspaper",
+    next: "hub_post_budget",
+    nextLabel: "SIX WEEKS TO THE PRIMARY",
+    stories: [
+      {
+        headline: (s) => {
+          if (s.flags.controlBoard) return "Albany Takes the Books";
+          if (s.resources.budget >= 0) return "Balanced: Council Adopts Budget On Time";
+          return "City Adopts Budget in the Red";
+        },
+        body: (s) => {
+          if (s.flags.controlBoard)
+            return `For the first time since the Beame administration, a state Financial Control Board holds approval power over every significant city expenditure. The Mayor's office calls the arrangement "temporary." The board's enabling statute does not use that word. Fiscal monitors in Albany described city negotiators as "cooperative," which in Albany is not a compliment.`;
+          if (s.resources.budget >= 0)
+            return `The adopted budget closes a structural deficit that three previous administrations managed mostly by describing it differently. The coalition that passed it — and the constituencies that paid for it — will both be on the ballot in November of next year. Comptroller's office analysts called the math "real, with asterisks."`;
+          return `The Council adopted a budget ${Math.abs(s.resources.budget)} points out of balance, papered over with assurances that next year will be different. The bond market's reaction was a half-step downgrade in outlook — polite, for now. Albany noticed. Albany always notices.`;
+        },
+      },
+      {
+        headline: () => "What the Deal Cost",
+        body: (s) => {
+          const items = [];
+          if (s.flags.deferredCapital) items.push("capital projects deferred (again)");
+          if (s.flags.deferredPension) items.push("a pension reclassification actuaries call 'creative'");
+          if (s.flags.issuedBonds) items.push("emergency bonds future budgets will service");
+          if (s.flags.soldAirRights) items.push("air rights sold over neighborhood objections");
+          if (s.flags.owesHochul) items.push("a favor owed to the Governor, size unspecified");
+          return items.length
+            ? `The fine print, itemized: ${items.join("; ")}. Every entry has a constituency, and every constituency has a memory.`
+            : "Remarkably little, by the standards of these things. The fine print contains no time bombs that anyone has found yet. Analysts are rereading it.";
+        },
+      },
+      {
+        headline: () => "Primary Season Opens",
+        body: () => "The Democratic gubernatorial primary is six weeks out. The Mayor's endorsement — if one comes — is the last major piece on the board.",
+      },
+    ],
+  },
+
+  paper_gov: {
+    type: "newspaper",
+    next: "time_to_2027",
+    nextLabel: "ON TO 2027",
+    stories: [
+      {
+        headline: (s) => {
+          switch (s.flags.govWinner) {
+            case "delgado": return "Delgado Storms Albany";
+            case "salazar": return "Salazar Shocks the Nation";
+            case "blakeman": return "Blakeman Takes Albany";
+            default: return "Hochul Holds";
+          }
+        },
+        body: (s) => {
+          switch (s.flags.govWinner) {
+            case "delgado": return "The labor-backed insurgent completed his march to the Executive Mansion last night, carrying a housing platform the WFP largely drafted and a coalition that did not exist eighteen months ago. City Hall's relationship with Albany now runs through people who remember exactly who helped — and who didn't.";
+            case "salazar": return "New York elected a democratic socialist governor last night, a sentence that will take some getting used to in the suites of Midtown and the caucus rooms of Washington. The Governor-elect called for statewide rent stabilization before the networks finished calling the race.";
+            case "blakeman": return "The first Republican governor in two decades won on a law-and-order message aimed squarely at the five boroughs, which voted against him and will now negotiate their transit funding with him. His transition team's first announcement mentioned the MTA, congestion pricing, and 'fiscal accountability for New York City' in a single sentence.";
+            default: return "The Governor survived the most serious primary challenge of her career and a general election that briefly looked interesting. Albany remains what it was: neither ally nor obstacle, pending further developments. Her margin was built on the suburbs, labor, and the institutional Democratic machine — the same coalition as always, one more time.";
+          }
+        },
+      },
+      {
+        headline: (s) => s.flags.endorsedGov === s.flags.govWinner
+          ? "Mayor Picked the Winner"
+          : "City Hall on the Outside",
+        body: (s) => s.flags.endorsedGov === s.flags.govWinner
+          ? "The Mayor's endorsement is now an asset in the Executive Mansion's ledger. What it purchases remains to be negotiated."
+          : "The Mayor backed someone else, a fact the winner's staff mentions unprompted. The relationship is described, charitably, as 'professional.'",
+      },
+      {
+        headline: () => "All 51 Council Seats on the Ballot Next November",
+        body: () => "Party strategists on every side are already modeling the map. The Mayor's first two years will be the subtext of every race.",
+      },
+    ],
+  },
+
+  paper_election27: {
+    type: "newspaper",
+    next: "federal_endgame",
+    nextEffect: (s) => { s.month = 12; s.monthLabel = "December"; },
+    nextLabel: "DECEMBER",
+    stories: [
+      {
+        headline: (s) => {
+          const n = s.flags.election2027?.flips.length ?? 0;
+          if (n === 0) return "Status Quo: Council Map Holds";
+          if (n <= 3) return `Council Shifts at the Margins: ${n} Seat${n !== 1 ? "s" : ""} Flip`;
+          return `Council Shakeup: ${n} Seats Change Hands`;
+        },
+        body: (s) => {
+          const e = s.flags.election2027;
+          if (!e || e.flips.length === 0)
+            return "Fifty-one districts, fifty-one holds — the first status-quo Council election in a generation. Incumbency, it turns out, is a hell of a drug, and two years of City Hall's choices moved votes without moving seats. Both parties' strategists claim vindication, which means neither has any.";
+          const gop = (e.counts.republican || 0) + (e.counts.farRight || 0);
+          return `The new Council seats ${51 - gop} Democrats against ${gop} Republicans, but the story is inside the majority: the factional balance that decides Speakers, budgets, and everything else shifted last night in ways both parties will spend the winter measuring. Turnout patterns tracked the constituencies City Hall spent two years courting — or crossing.`;
+        },
+      },
+      {
+        headline: (s) => {
+          if (s.flags.scandal2027 === "stood_by") return "Ticket-Gate Shadowed Every Race";
+          if (s.flags.scandal2027) return "Ticket-Gate: A Scandal That Didn't Land";
+          return null;
+        },
+        body: (s) => s.flags.scandal2027 === "stood_by"
+          ? "The Mayor's decision to stand by his Buildings Commissioner gave every challenger a closing argument. Several used it verbatim."
+          : "The October story that was supposed to reshape the race mostly didn't — swift handling, or short memories, depending on the columnist.",
+      },
+      {
+        headline: () => "Washington Watches: DHS 'Reviewing Options' on New York",
+        body: () => "Federal law enforcement postures toward the city have hardened all autumn. Administration officials, asked directly about task force rumors, said only that 'everything is on the table.' City Hall has made no public preparations. December will tell.",
       },
     ],
   },

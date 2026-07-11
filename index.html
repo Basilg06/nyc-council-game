@@ -10,6 +10,15 @@
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { background: #0E0E10; height: 100%; overflow: hidden; }
+
+      /* ── shared animation + interaction polish ── */
+      @keyframes sceneIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+      .cg-scene-in { animation: sceneIn 0.35s ease both; }
+      .cg-choice { transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
+      .cg-choice:hover:not(:disabled) { transform: translateX(4px); background: #EFE8D4 !important; border-color: #1C2B4A !important; }
+      .cg-btn { transition: filter 0.12s ease, transform 0.08s ease; }
+      .cg-btn:hover:not(:disabled) { filter: brightness(1.15); }
+      .cg-btn:active:not(:disabled) { transform: translateY(1px); }
     </style>
   </head>
   <body>

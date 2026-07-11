@@ -26,24 +26,28 @@ Everything flows through `src/data/scenes.js` — a flat map of scene objects ke
 | `hub` | App → HubMapOverlay | map pins, N of M actions |
 | `time_pass` | App → TimePassOverlay | ADVANCE TIME gate + month ticker |
 | `report` | SceneView → ReportScene | end-of-year report card |
+| `newspaper` | SceneView → NewspaperScene | The New York Ledger front page between chapters |
 
 Scene conventions:
 - `lines` entries can be strings or `(state) => string` functions — use functions for anything that references earlier choices.
 - `choices` support `show(state)` (hidden when false), `available(state)` + `tooltip` (visible but disabled), `effect(state)` (mutates a `structuredClone` draft), and `next`.
 - Phone calls support `turns: [{ lines, choices }, ...]` for multi-exchange conversations in one panel. A choice **without** `next` advances to the next turn; a choice **with** `next` ends the call via CONTINUE. `speaker` can be a function of state (used for the sitting Speaker).
 - `decline` on a phone call adds a DECLINE button on the ringing screen.
+- `consult: { label, text }` on a dialogue adds an optional "ask the room" button that reveals the political shop's read before you choose. `text` can be a function of state.
+- `newspaper` scenes take `stories: [{ headline, body }]` (functions of state allowed; a null headline drops the story) — the first is the lead, the rest are secondary, and the sidebar auto-fills from `getHeadlines`.
 
 ## The election engine (`src/data/elections.js`)
 
 Hidden from the player. Each district scores every faction:
 
 ```
-score = factionApproval × factionInfluence
+raw   = factionApproval × factionInfluence
       + Σ groups( approval × influence × affinity[group][faction] × salience[district][group] )
+score = raw × LEAN_WEIGHT[|position(faction) − position(districtLean)|]
       + 25 incumbency bonus
 ```
 
-Highest score wins the seat. Inputs the player actually controls:
+Highest score wins the seat. `LEAN_WEIGHT` anchors districts to their electorate: adjacent factions are competitive (×0.85), two steps is an upset (×0.5), three+ is effectively dead (≤×0.18) — so a south-shore Staten Island seat swings within the GOP family and a Bed-Stuy seat swings within the left, never across the whole spectrum. Inputs the player actually controls:
 - **Approvals** move with nearly every choice.
 - **Influence** (mobilization multipliers) moves with budget picks (`INFLUENCE_SHIFTS`, applied automatically in BudgetRoundScene), campaign-trail hub actions, and 2027 summer hub actions.
 

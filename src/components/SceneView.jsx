@@ -3,6 +3,7 @@ import { CHARACTERS } from "../data/characters";
 import { SCENES } from "../data/scenes";
 import { FACTIONS } from "../data/council";
 import { applyInfluenceShiftsMut } from "../data/elections";
+import { getHeadlines } from "../data/news";
 import styles from "../styles";
 
 export default function SceneView({ state, sceneId, goTo, updateState }) {
@@ -31,6 +32,9 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
   }
   if (scene.type === "report") {
     return <ReportScene scene={scene} state={state} />;
+  }
+  if (scene.type === "newspaper") {
+    return <NewspaperScene scene={scene} state={state} goTo={goTo} />;
   }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
 }
@@ -209,9 +213,13 @@ function PhoneCallChat({ c, scene, state, choices, goTo }) {
 }
 
 function DialogueScene({ scene, state, goTo }) {
+  const [consulted, setConsulted] = useState(false);
   const c = CHARACTERS[scene.speaker];
   const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
   const headerBg = scene.urgent ? "#8B1A1A" : c.color;
+  const consultText = scene.consult
+    ? (typeof scene.consult.text === "function" ? scene.consult.text(state) : scene.consult.text)
+    : null;
   return (
     <div style={styles.sceneCard}>
       <div style={{ ...styles.speakerTag, background: headerBg }}>
@@ -224,6 +232,24 @@ function DialogueScene({ scene, state, goTo }) {
           return <p key={i} style={styles.line}>{text}</p>;
         })}
       </div>
+      {scene.consult && (
+        <div style={{ padding: "0 24px 4px" }}>
+          {consulted ? (
+            <div style={{ background: "#F0EBDC", borderLeft: "3px solid #C9A227", padding: "12px 16px", fontSize: 13.5, fontStyle: "italic", color: "#4A4438", lineHeight: 1.6, animation: "sceneIn 0.25s ease both" }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, letterSpacing: "0.14em", color: "#9A8A50", marginBottom: 6, fontStyle: "normal" }}>THE POLITICAL SHOP'S READ</div>
+              {consultText}
+            </div>
+          ) : (
+            <button
+              className="cg-btn"
+              onClick={() => setConsulted(true)}
+              style={{ width: "100%", background: "transparent", border: "1px dashed #B8AE90", borderRadius: 3, padding: "9px 14px", fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: "#8A7E60", cursor: "pointer", textAlign: "center" }}
+            >
+              ☰ {scene.consult.label || "ASK THE ROOM"}
+            </button>
+          )}
+        </div>
+      )}
       <div style={styles.choiceList}>
         {choices.map((ch, i) => {
             const unavailable = ch.available ? !ch.available(state) : false;
@@ -232,6 +258,7 @@ function DialogueScene({ scene, state, goTo }) {
               <button
                 key={i}
                 disabled={isDisabled}
+                className="cg-choice"
                 title={isDisabled && ch.tooltip ? ch.tooltip : undefined}
                 style={{
                   ...styles.choiceBtn,
@@ -303,7 +330,7 @@ function NegotiationScene({ scene, state, goTo }) {
         <div style={styles.projectionNote}>{projection.note}</div>
       </div>
       <div style={styles.choiceList}>
-        <button style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
+        <button className="cg-btn" style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
       </div>
     </div>
   );
@@ -379,6 +406,7 @@ function WhipScene({ scene, state, goTo, updateState }) {
 
       <div style={{ padding: "12px 20px 20px" }}>
         <button
+          className="cg-btn"
           style={{ ...styles.submitBtn, width: "100%", background: callBtnBg, textAlign: "center" }}
           onClick={() => goTo(callNext, callEffect)}
         >
@@ -481,6 +509,7 @@ function BudgetRoundScene({ scene, state, goTo }) {
       <div style={{ padding: "4px 20px 20px" }}>
         <button
           disabled={!selected}
+          className="cg-btn"
           style={{ ...styles.submitBtn, width: "100%", textAlign: "center", opacity: selected ? 1 : 0.4, cursor: selected ? "pointer" : "not-allowed" }}
           onClick={submit}
         >
@@ -594,7 +623,75 @@ function GroupNeg({ group, state, updateState, onBack }) {
         <div style={styles.projectionNote}>{projection.note}</div>
       </div>
       <div style={styles.choiceList}>
-        <button style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
+        <button className="cg-btn" style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
+      </div>
+    </div>
+  );
+}
+
+function NewspaperScene({ scene, state, goTo }) {
+  const resolve = (v) => (typeof v === "function" ? v(state) : v);
+  const stories = scene.stories.map((st) => ({
+    headline: resolve(st.headline),
+    body: resolve(st.body),
+  })).filter((st) => st.headline);
+  const [lead, ...rest] = stories;
+  const briefs = getHeadlines(state).slice(0, 4);
+  const serif = { fontFamily: "'Lora', Georgia, serif" };
+  const mono = { fontFamily: "'Space Mono', monospace" };
+
+  return (
+    <div style={{ background: "#F2EDDE", color: "#1A1810", border: "1px solid #C8BFA4", borderRadius: 2, boxShadow: "0 8px 30px rgba(0,0,0,0.5)", overflow: "hidden" }}>
+      {/* Masthead */}
+      <div style={{ padding: "18px 26px 10px", borderBottom: "3px double #1A1810", textAlign: "center" }}>
+        <div style={{ ...serif, fontWeight: 700, fontSize: 34, letterSpacing: "0.04em", lineHeight: 1 }}>The New York Ledger</div>
+        <div style={{ ...mono, fontSize: 8.5, letterSpacing: "0.18em", color: "#5A5240", marginTop: 8, display: "flex", justifyContent: "space-between" }}>
+          <span>VOL. CLXXIV</span>
+          <span>{(state.monthLabel || "").toUpperCase()} {state.year} — LATE CITY EDITION</span>
+          <span>THREE DOLLARS</span>
+        </div>
+      </div>
+
+      {/* Lead story */}
+      <div style={{ padding: "18px 26px 6px" }}>
+        <div style={{ ...serif, fontWeight: 700, fontSize: 30, lineHeight: 1.12, letterSpacing: "-0.01em", textTransform: "uppercase" }}>
+          {lead.headline}
+        </div>
+        {lead.body && (
+          <div style={{ ...serif, fontSize: 13, lineHeight: 1.62, marginTop: 12, columnCount: 2, columnGap: 22, columnRule: "1px solid #D8D0B8", textAlign: "justify" }}>
+            <span style={{ ...mono, fontSize: 9, letterSpacing: "0.1em" }}>CITY HALL — </span>{lead.body}
+          </div>
+        )}
+      </div>
+
+      {/* Secondary stories + wire sidebar */}
+      <div style={{ display: "flex", gap: 0, borderTop: "1px solid #1A1810", margin: "14px 26px 0", paddingBottom: 16 }}>
+        <div style={{ flex: 1.6, paddingTop: 12, paddingRight: 18 }}>
+          {rest.map((st, i) => (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <div style={{ ...serif, fontWeight: 700, fontSize: 16.5, lineHeight: 1.25 }}>{st.headline}</div>
+              {st.body && <div style={{ ...serif, fontSize: 12, lineHeight: 1.55, marginTop: 5, color: "#33302A" }}>{st.body}</div>}
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1, borderLeft: "1px solid #D8D0B8", paddingLeft: 18, paddingTop: 12 }}>
+          <div style={{ ...mono, fontSize: 8.5, letterSpacing: "0.16em", marginBottom: 10, color: "#5A5240" }}>ACROSS THE FIVE BOROUGHS</div>
+          {briefs.map((b, i) => (
+            <div key={i} style={{ ...serif, fontSize: 11, lineHeight: 1.45, marginBottom: 9, paddingBottom: 9, borderBottom: i < briefs.length - 1 ? "1px dotted #C8BFA4" : "none" }}>
+              {b.charAt(0) + b.slice(1).toLowerCase()}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "0 26px 20px" }}>
+        <button
+          className="cg-btn"
+          onClick={() => goTo(scene.next, scene.nextEffect)}
+          style={{ width: "100%", background: "#1A1810", color: "#F2EDDE", border: "none", borderRadius: 2, padding: "12px 0", ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", cursor: "pointer" }}
+        >
+          {scene.nextLabel || "PUT THE PAPER DOWN"} →
+        </button>
       </div>
     </div>
   );
@@ -815,6 +912,7 @@ function HubScene({ scene, state, goTo, updateState }) {
       <div style={{ padding: "14px 20px 18px" }}>
         <button
           onClick={advance}
+          className="cg-btn"
           style={{ ...styles.submitBtn, width: "100%", textAlign: "center", background: "#1C3050", borderColor: "#2E5080" }}
         >
           {scene.nextLabel} →

@@ -127,7 +127,7 @@ export default function App() {
 
       {!isChamber && !isTimePass && !isHub && !isPhoneCall && (
         <div style={styles.sceneOverlay}>
-          <div style={styles.sceneOverlayInner}>
+          <div key={sceneId} className="cg-scene-in" style={styles.sceneOverlayInner}>
             <SceneView state={state} sceneId={sceneId} goTo={goTo} updateState={updateState} />
           </div>
         </div>
@@ -189,7 +189,7 @@ function TimePassOverlay({ scene, goTo, updateState }) {
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#4A7FA5", letterSpacing: "0.2em", textTransform: "uppercase" }}>
           {scene.year}
         </div>
-        <button onClick={advance} style={{
+        <button className="cg-btn" onClick={advance} style={{
           fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700,
           background: "#1C3050", color: "#7BBFE8",
           border: "1px solid #2E5080", borderRadius: 3,
@@ -557,11 +557,11 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
             <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: c.color, opacity: 0.8, letterSpacing: "0.12em", textTransform: "uppercase" }}>{c.role}</div>
           </div>
           <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 4 }}>
-            <button onClick={() => setAnswered(true)} style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "#1C4A2E", color: "#6DBF8A", border: "1px solid #2A6A40", padding: "13px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
+            <button className="cg-btn" onClick={() => setAnswered(true)} style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "#1C4A2E", color: "#6DBF8A", border: "1px solid #2A6A40", padding: "13px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
               ANSWER
             </button>
             {scene.decline && (
-              <button onClick={() => goTo(scene.decline.next, scene.decline.effect)} style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "transparent", color: "#6A3030", border: "1px solid #3A1E1E", padding: "13px 18px", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
+              <button className="cg-btn" onClick={() => goTo(scene.decline.next, scene.decline.effect)} style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, background: "transparent", color: "#6A3030", border: "1px solid #3A1E1E", padding: "13px 18px", borderRadius: 3, cursor: "pointer", letterSpacing: "0.12em" }}>
                 DECLINE
               </button>
             )}
@@ -614,12 +614,12 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
 
       <div style={{ flexShrink: 0, minHeight: 160, padding: "4px 14px 14px", display: "flex", flexDirection: "column", gap: 8, justifyContent: "flex-end" }}>
         {choicesReady && !chosen && choices.map((ch, i) => (
-          <button key={i} onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 120}ms` }}>
+          <button key={i} className="cg-btn" onClick={() => pick(ch)} style={{ textAlign: "left", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: "#A09888", background: "#0C1219", border: "1px solid #1A2535", borderRadius: 3, padding: "10px 14px", cursor: "pointer", lineHeight: 1.55, animation: "fadeSlideUp 0.5s ease both", animationDelay: `${i * 120}ms` }}>
             <span style={{ color: "#3A5A7A", marginRight: 8, fontFamily: "'Space Mono', monospace", fontSize: 11 }}>§</span>{ch.text}
           </button>
         ))}
         {chosen && chosen.next && (
-          <button onClick={() => goTo(chosen.next, chosen.effect)} style={{ width: "100%", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", padding: "11px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.1em" }}>
+          <button className="cg-btn" onClick={() => goTo(chosen.next, chosen.effect)} style={{ width: "100%", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", padding: "11px 0", borderRadius: 3, cursor: "pointer", letterSpacing: "0.1em" }}>
             CONTINUE →
           </button>
         )}

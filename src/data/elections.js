@@ -111,16 +111,33 @@ export function applyInfluenceShifts(actionId, state) {
   return { ...state, influence };
 }
 
+// Ideological spectrum positions — used to anchor districts to their lean.
+// A district's electorate doesn't teleport across the spectrum: candidates
+// far from the district's natural lean are discounted to near-zero, so a
+// far-right seat on Staten Island's south shore stays in the GOP family and
+// a Bed-Stuy seat swings between DSA and its neighbors — never to Vernikov.
+export const FACTION_POSITIONS = {
+  dsa: 0, leftWfp: 1, progressive: 2, establishment: 3,
+  centrist: 4, felder: 5, republican: 6, farRight: 7,
+};
+
+// Discount by ideological distance from the district's lean.
+// Δ0 full strength, Δ1 competitive, Δ2 an upset, Δ3+ effectively dead.
+const LEAN_WEIGHT = [1.0, 0.85, 0.5, 0.18, 0.06, 0.03, 0.02, 0.01];
+
 // Score all factions for a district and return the winning faction key.
 export function calculateDistrictWinner(districtId, state) {
   const district = DISTRICT_DATA[districtId];
   if (!district) return null;
   const { factionApproval, groups, influence } = state;
   const INCUMBENCY_BONUS = 25;
+  // Lean comes from the district's underlying electorate (static data);
+  // incumbency comes from whoever actually holds the seat right now.
+  const leanPos = FACTION_POSITIONS[district.faction];
+  const incumbentFaction = state.council.find((m) => m.id === districtId)?.faction ?? district.faction;
   const scores = {};
   for (const faction of Object.keys(factionApproval)) {
     let score = factionApproval[faction] * (influence.factions[faction] ?? 1.0);
-    if (faction === district.faction) score += INCUMBENCY_BONUS;
     for (const [groupKey, salience] of Object.entries(district.groups)) {
       if (!salience) continue;
       const groupApproval = groups[groupKey]?.approval ?? 50;
@@ -128,6 +145,9 @@ export function calculateDistrictWinner(districtId, state) {
       const affinity = AFFINITIES[groupKey]?.[faction] ?? 0;
       score += groupApproval * groupInfluence * affinity * salience;
     }
+    const dist = Math.abs(FACTION_POSITIONS[faction] - leanPos);
+    score *= LEAN_WEIGHT[Math.min(dist, LEAN_WEIGHT.length - 1)];
+    if (faction === incumbentFaction) score += INCUMBENCY_BONUS;
     scores[faction] = score;
   }
   return Object.entries(scores).reduce(
