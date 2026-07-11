@@ -396,8 +396,8 @@ export const SCENES = {
       },
       {
         id: "jan_rats",
-        label: "The rat czar wants five minutes",
-        desc: "The citywide director of rodent mitigation has a pilot program, a slide deck, and — reportedly — props.",
+        label: "Kathleen Corradi — the rat czar — wants five minutes",
+        desc: "The citywide director of rodent mitigation, an Adams appointee who survived the transition. She has a pilot program, a slide deck, and — reportedly — props.",
         next: "rat_czar",
         done: (s) => !!s.flags.metRatCzar,
       },
@@ -529,13 +529,13 @@ export const SCENES = {
   rat_czar: {
     type: "dialogue", speaker: "park",
     lines: [
-      "The citywide director of rodent mitigation. Twenty-two minutes, eleven slides, and at one point she produced — from a bag — a model of a sealed curbside container she referred to as 'the future.'",
+      "Kathleen Corradi. Adams appointed her, two administrations kept her, and she has outlasted four deputy mayors. Twenty-two minutes, eleven slides, and at one point she produced — from a bag — a model of a sealed curbside container she referred to as 'the future.'",
       "The ask: $4 million to expand containerized trash to three more community districts. The data's actually good — burrow counts down forty percent in the pilot.",
       "It's rats, Mr. Mayor. It is also, per the polling, the single most popular thing this government does.",
     ],
     choices: [
       {
-        text: "Fund the expansion. Stand next to the container at the presser.",
+        text: "Keep her. Fund the expansion. Stand next to the container at the presser.",
         next: "desk_jan2026",
         effect: (s) => {
           s.flags.metRatCzar = true;
@@ -544,7 +544,7 @@ export const SCENES = {
         },
       },
       {
-        text: "Fund it quietly. No mayor should be photographed with 'the future.'",
+        text: "Keep her, fund it quietly. No mayor should be photographed with 'the future.'",
         next: "desk_jan2026",
         effect: (s) => {
           s.flags.metRatCzar = true;
@@ -553,11 +553,20 @@ export const SCENES = {
         },
       },
       {
-        text: "Not this quarter. The rats can hold the line until spring.",
+        text: "Keep her, no money this quarter. The rats can hold the line until spring.",
         next: "desk_jan2026",
         effect: (s) => {
           s.flags.metRatCzar = true;
           s.approval = Math.max(0, s.approval - 1);
+        },
+      },
+      {
+        text: "Dismiss her. Fold the office. The city does not need a rat czar.",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metRatCzar = true;
+          s.flags.dismissedRatCzar = true;
+          s.approval = Math.max(0, s.approval - 2);
         },
       },
     ],
@@ -928,6 +937,49 @@ export const SCENES = {
     months: ["June"],
     year: "2026",
     next: "governor_primary",
+  },
+
+  call_speaker_ratczar: {
+    type: "phone_call",
+    speaker: (s) => (s.flags.speakerElected === "hudson" ? "hudson" : "menin"),
+    turns: [
+      {
+        lines: [
+          '"Mr. Mayor. Congratulations again on— actually, no. Let me get right to it."',
+          '"Did you fire the rat czar?"',
+        ],
+        choices: [
+          { text: '"The position was administratively redundant—"' },
+          { text: '"...Yes."' },
+        ],
+      },
+      {
+        lines: [
+          '"Forty minutes ago, this Council passed Intro 0001-2026 — the Rodent Mitigation Permanence Act — by a vote of 48 to 3."',
+          '"My first bill. My first act as Speaker. Do you understand that? Members who won\'t agree on the time of day co-sponsored this thing."',
+          '"Kathleen Corradi is now a chartered position with independent budget protection. She reports to the Council. On matters of rodent policy she — let me check the bill text — she functionally outranks you."',
+          '"The container press conference is Thursday. You will be standing next to the container."',
+        ],
+        choices: [
+          {
+            text: '"...I\'ll be there."',
+            next: "hub_post_speaker",
+            effect: (s) => {
+              s.flags.ratCzarPermanent = true;
+              s.approval = Math.min(100, s.approval + 1);
+            },
+          },
+          {
+            text: '"This is an absurd use of the Council\'s first session."',
+            next: "hub_post_speaker",
+            effect: (s) => {
+              s.flags.ratCzarPermanent = true;
+              s.figures.speaker.approval = Math.max(0, s.figures.speaker.approval - 3);
+            },
+          },
+        ],
+      },
+    ],
   },
 
   hub_post_speaker: {
@@ -2706,7 +2758,7 @@ export const SCENES = {
 
   paper_speaker: {
     type: "newspaper",
-    next: "hub_post_speaker",
+    next: (s) => (s.flags.dismissedRatCzar ? "call_speaker_ratczar" : "hub_post_speaker"),
     nextLabel: "BACK TO CITY HALL",
     stories: [
       {

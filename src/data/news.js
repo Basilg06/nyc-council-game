@@ -77,6 +77,10 @@ export function getHeadlines(s) {
   if (s.groups.tenantBloc.approval > 65) h.push("TENANT COALITION: 'FINALLY, A MAYOR WHO SHOWS UP'");
   if (s.groups.teamsters.approval < 35)  h.push("TEAMSTERS LOCAL 237 WEIGHS NO-CONFIDENCE VOTE");
 
+  // ── The rat czar saga ──
+  if (f.ratCzarPermanent) h.push("INTRO 0001: COUNCIL MAKES RAT CZAR PERMANENT, 48–3 — CORRADI 'HUMBLED'");
+  else if (f.dismissedRatCzar) h.push("RAT CZAR CORRADI OUT — RODENT COMMUNITY 'CAUTIOUSLY OPTIMISTIC'");
+
   // ── Ticking time bombs ──
   if (f.deferredCapital && !f.crisis2027) h.push("ENGINEERS WARN: DEFERRED CAPITAL WORK 'A GAMBLE'");
   if (f.deferredPension) h.push("PENSION RECLASSIFICATION RAISES EYEBROWS AT COMPTROLLER'S OFFICE");

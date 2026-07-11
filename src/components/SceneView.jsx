@@ -692,7 +692,7 @@ function NewspaperScene({ scene, state, goTo }) {
   function putDown() {
     // Snapshot the resolved edition into the press archive before moving on.
     const edition = { date: `${state.monthLabel} ${state.year}`, stories, briefs };
-    goTo(scene.next, (s) => {
+    goTo(resolve(scene.next), (s) => {
       if (scene.nextEffect) scene.nextEffect(s);
       if (!s.flags.pressArchive) s.flags.pressArchive = [];
       s.flags.pressArchive.push(edition);
@@ -821,6 +821,7 @@ function ReportScene({ scene, state, onMapPeek }) {
     const n = f.election2027.flips.length;
     ledger.push(n > 0 ? `The 2027 council election flipped ${n} seat${n !== 1 ? "s" : ""}.` : "Every council coalition held its ground in November.");
   }
+  if (f.ratCzarPermanent) ledger.push("You dismissed the rat czar. The Council's first act was making her permanent, 48–3. The container photos exist forever.");
   if (f.newCommissioner) ledger.push("Commissioner Vasquez took the oath in June — the interim era ended on your terms.");
   if (f.endgame === "spared")   ledger.push("Operation Safeguard never crossed the river. The President called it off — for you.");
   if (f.endgame === "stand")    ledger.push("When the feds staged across the Hudson, Commissioner Tisch and 34,000 officers stood with City Hall.");
