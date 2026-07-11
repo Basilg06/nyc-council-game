@@ -21,8 +21,8 @@ export default function SceneView({ state, sceneId, goTo, updateState, onMapPeek
   if (scene.type === "whip_vote") {
     return <WhipScene scene={scene} state={state} goTo={goTo} updateState={updateState} />;
   }
-  if (scene.type === "budget_round") {
-    return <BudgetRoundScene scene={scene} state={state} goTo={goTo} />;
+  if (scene.type === "budget_fight") {
+    return <BudgetFightScene scene={scene} state={state} goTo={goTo} />;
   }
   if (scene.type === "hub") {
     return <HubScene scene={scene} state={state} goTo={goTo} updateState={updateState} />;
@@ -431,45 +431,164 @@ function GroupRow({ group, status, onNegotiate }) {
   );
 }
 
-function BudgetRoundScene({ scene, state, goTo }) {
-  const [selected, setSelected] = useState(null);
+// Multi-round budget negotiation. Picks are staged locally — nothing touches
+// game state until the whole package is adopted, which is what makes free
+// back-navigation between rounds possible. A crisis round appears at the end
+// if the projected total is still negative.
+function BudgetFightScene({ scene, state, goTo }) {
+  const [picks, setPicks] = useState({});
+  const [stage, setStage] = useState(0);
+  const base = state.resources.budget;
+  const baseRounds = scene.rounds;
 
-  function effectiveDelta(opt) {
-    return typeof opt.delta === "function" ? opt.delta(state) : opt.delta;
+  const resolveDelta = (opt, proj) => (typeof opt.delta === "function" ? opt.delta(state, proj) : opt.delta);
+
+  // Budget after applying picks for rounds 0..idx (sequentially, so
+  // projection-dependent deltas in later rounds see the running total).
+  function projAfter(idx) {
+    let proj = base;
+    for (let i = 0; i <= idx && i < baseRounds.length; i++) {
+      const opt = baseRounds[i].options.find((o) => o.id === picks[i]);
+      if (opt) proj += resolveDelta(opt, proj);
+    }
+    return proj;
   }
 
-  function submit() {
-    if (!selected) return;
-    const opt = scene.options.find((o) => o.id === selected);
-    const postBudget = state.resources.budget + effectiveDelta(opt);
-    const nextId = typeof scene.next === "function" ? scene.next(postBudget, state) : scene.next;
-    // Budget choices also mobilize/demobilize constituencies — this feeds
-    // the hidden election engine come November 2027.
-    goTo(nextId, (s) => { opt.effect(s); applyInfluenceShiftsMut(opt.id, s); });
+  const proj3 = projAfter(baseRounds.length - 1);
+  const needCrisis = !!scene.crisis && proj3 < 0 && baseRounds.every((r, i) => picks[i]);
+  const rounds = needCrisis ? [...baseRounds, scene.crisis] : baseRounds;
+  const crisisIdx = baseRounds.length;
+  const reviewStage = rounds.length;
+  const singleRound = baseRounds.length === 1 && !scene.crisis;
+
+  function fullProj() {
+    let proj = proj3;
+    if (needCrisis) {
+      const opt = scene.crisis.options.find((o) => o.id === picks[crisisIdx]);
+      if (opt) proj += resolveDelta(opt, proj3);
+    }
+    return proj;
   }
 
-  const headerBg = scene.urgent ? "#8B1A1A" : "#1C2B4A";
+  const isReview = stage === reviewStage && !singleRound;
+  const round = isReview ? null : rounds[stage];
+  const projBefore = stage === 0 ? base : projAfter(stage - 1);
+  const picked = picks[stage];
+  const mono = { fontFamily: "'Space Mono', monospace" };
+
+  function commit() {
+    goTo(scene.next, (s) => {
+      rounds.forEach((r, i) => {
+        const opt = r.options.find((o) => o.id === picks[i]);
+        if (opt) {
+          opt.effect(s);
+          // Budget choices also mobilize/demobilize constituencies — this
+          // feeds the hidden election engine come November 2027.
+          applyInfluenceShiftsMut(opt.id, s);
+        }
+      });
+    });
+  }
+
+  function advance() {
+    if (!picked) return;
+    if (singleRound) { commit(); return; }
+    setStage(stage + 1);
+  }
+
+  // ── Review stage ──
+  if (isReview) {
+    const crisisUnresolved = needCrisis && !picks[crisisIdx];
+    return (
+      <div style={styles.sceneCard}>
+        <div style={{ ...styles.speakerTag, background: "#1C2B4A" }}>
+          <div style={styles.speakerName}>THE PACKAGE</div>
+          <div style={{ ...styles.speakerRole, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>BUDGET FIGHT — FINAL REVIEW</span>
+            <span style={{ ...mono, fontWeight: 700, color: fullProj() < 0 ? "#E88" : "#8E8" }}>
+              {base > 0 ? "+" : ""}{base} → {fullProj() > 0 ? "+" : ""}{fullProj()} pts
+            </span>
+          </div>
+        </div>
+        <div style={{ padding: "14px 20px 4px" }}>
+          {rounds.map((r, i) => {
+            const opt = r.options.find((o) => o.id === picks[i]);
+            if (!opt) return null;
+            const d = resolveDelta(opt, i === crisisIdx ? proj3 : projAfter(i - 1));
+            return (
+              <div key={i} onClick={() => setStage(i)} style={{ display: "flex", alignItems: "baseline", gap: 12, padding: "9px 12px", marginBottom: 6, background: "#F5F2E8", border: "1px solid #D8D2C0", borderRadius: 3, cursor: "pointer" }}>
+                <div style={{ ...mono, fontSize: 8.5, letterSpacing: "0.08em", color: "#999", width: 110, flexShrink: 0 }}>{r.title}</div>
+                <div style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: "#3D3D3D" }}>{opt.label}</div>
+                <div style={{ ...mono, fontWeight: 700, fontSize: 13, color: d > 0 ? "#2D5C3E" : d < 0 ? "#8B1A1A" : "#999" }}>{d > 0 ? "+" : ""}{d}</div>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 11, fontStyle: "italic", color: "#888", padding: "2px 2px 6px" }}>
+            Click any line to reopen that round.
+          </div>
+        </div>
+        <div style={{ padding: "4px 20px 20px", display: "flex", gap: 10 }}>
+          <button className="cg-btn" onClick={() => setStage(reviewStage - 1)} style={{ ...styles.submitBtn, background: "#1C2B4A", padding: "13px 18px" }}>
+            ← BACK
+          </button>
+          <button
+            className="cg-btn"
+            disabled={crisisUnresolved}
+            onClick={crisisUnresolved ? undefined : commit}
+            style={{ ...styles.submitBtn, flex: 1, textAlign: "center", opacity: crisisUnresolved ? 0.4 : 1, cursor: crisisUnresolved ? "not-allowed" : "pointer" }}
+          >
+            {crisisUnresolved ? "THE CRISIS ROUND IS UNRESOLVED" : "ADOPT THE BUDGET →"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Round stages ──
+  const isCrisisStage = needCrisis && stage === crisisIdx;
+  const headerBg = round.urgent || isCrisisStage ? "#8B1A1A" : "#1C2B4A";
+  const roundLabel = isCrisisStage ? "CRISIS ROUND" : `ROUND ${stage + 1} OF ${baseRounds.length}`;
 
   return (
     <div style={styles.sceneCard}>
       <div style={{ ...styles.speakerTag, background: headerBg }}>
-        <div style={styles.speakerName}>{scene.title}</div>
+        <div style={styles.speakerName}>{round.title}</div>
         <div style={{ ...styles.speakerRole, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>BUDGET FIGHT</span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, color: state.resources.budget < 0 ? "#E88" : "#8E8" }}>
-            {state.resources.budget > 0 ? "+" : ""}{state.resources.budget} pts
+          <span>{singleRound ? "BUDGET FIGHT" : `BUDGET FIGHT — ${roundLabel}`}</span>
+          <span style={{ ...mono, fontWeight: 700, color: projBefore < 0 ? "#E88" : "#8E8" }}>
+            {base > 0 ? "+" : ""}{base} → {projBefore > 0 ? "+" : ""}{projBefore} pts
           </span>
         </div>
       </div>
 
+      {!singleRound && (
+        <div style={{ display: "flex", gap: 6, padding: "12px 24px 0", alignItems: "center" }}>
+          {rounds.map((r, i) => {
+            const reachable = i <= stage || picks[i] !== undefined;
+            return (
+              <div
+                key={i}
+                onClick={reachable ? () => setStage(i) : undefined}
+                title={r.title}
+                style={{
+                  flex: 1, height: 6, borderRadius: 3, cursor: reachable ? "pointer" : "default",
+                  background: i === stage ? "#1C2B4A" : picks[i] ? "#2D5C3E" : "#E5DFCC",
+                  border: i === crisisIdx && needCrisis ? "1px solid #8B1A1A" : "none",
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+
       <div style={styles.transcriptText}>
-        <p style={styles.line}>{typeof scene.prompt === "function" ? scene.prompt(state) : scene.prompt}</p>
+        <p style={styles.line}>{typeof round.prompt === "function" ? round.prompt(state) : round.prompt}</p>
       </div>
 
       <div style={{ padding: "0 20px 8px" }}>
-        {[...scene.options].sort((a, b) => effectiveDelta(a) - effectiveDelta(b)).map((opt) => {
-          const delta = effectiveDelta(opt);
-          const avail = !opt.available || opt.available(state);
+        {[...round.options].sort((a, b) => resolveDelta(a, projBefore) - resolveDelta(b, projBefore)).map((opt) => {
+          const delta = resolveDelta(opt, projBefore);
+          const avail = !opt.available || opt.available(state, projBefore);
           const reason = avail ? opt.costLabel
             : typeof opt.unavailableReason === "function" ? opt.unavailableReason(state)
             : (opt.unavailableReason || "Not available");
@@ -479,22 +598,27 @@ function BudgetRoundScene({ scene, state, goTo }) {
               opt={opt}
               delta={delta}
               available={avail}
-              active={selected === opt.id}
+              active={picks[stage] === opt.id}
               reason={reason}
-              onSelect={() => { if (avail) setSelected(opt.id); }}
+              onSelect={() => { if (avail) setPicks((p) => ({ ...p, [stage]: opt.id })); }}
             />
           );
         })}
       </div>
 
-      <div style={{ padding: "4px 20px 20px" }}>
+      <div style={{ padding: "4px 20px 20px", display: "flex", gap: 10 }}>
+        {stage > 0 && (
+          <button className="cg-btn" onClick={() => setStage(stage - 1)} style={{ ...styles.submitBtn, background: "#1C2B4A", padding: "13px 18px" }}>
+            ← ROUND {stage}
+          </button>
+        )}
         <button
-          disabled={!selected}
+          disabled={!picked}
           className="cg-btn"
-          style={{ ...styles.submitBtn, width: "100%", textAlign: "center", opacity: selected ? 1 : 0.4, cursor: selected ? "pointer" : "not-allowed" }}
-          onClick={submit}
+          style={{ ...styles.submitBtn, flex: 1, textAlign: "center", opacity: picked ? 1 : 0.4, cursor: picked ? "pointer" : "not-allowed" }}
+          onClick={advance}
         >
-          PUSH THIS MEASURE →
+          {!picked ? "PICK A MEASURE" : singleRound ? "ADOPT THE BUDGET →" : stage < rounds.length - 1 ? "LOCK ROUND — NEXT →" : "REVIEW THE PACKAGE →"}
         </button>
       </div>
     </div>

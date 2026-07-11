@@ -22,7 +22,7 @@ Everything flows through `src/data/scenes.js` — a flat map of scene objects ke
 | `dialogue` | SceneView → DialogueScene | `urgent: true` = red emergency header |
 | `phone_call` | App → PhoneCallPanel | ringing screen → draggable chat panel |
 | `whip_vote` | SceneView → WhipScene | per-bloc negotiation, offer chits |
-| `budget_round` | SceneView → BudgetRoundScene | one pick per round |
+| `budget_fight` | SceneView → BudgetFightScene | multi-round package: `rounds: [{title, prompt, options}]` + optional `crisis`; picks are staged with free back-navigation and only apply on ADOPT |
 | `hub` | App → HubMapOverlay | map pins, N of M actions |
 | `time_pass` | App → TimePassOverlay | ADVANCE TIME gate + month ticker |
 | `report` | SceneView → ReportScene | end-of-year report card (+ map peek) |

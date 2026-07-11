@@ -1140,13 +1140,15 @@ export const SCENES = {
       "Let's start.",
     ],
     choices: [
-      { text: "Get to work.", next: "budget_round1" },
+      { text: "Get to work.", next: "budget_fight_2026" },
     ],
   },
 
-  budget_round1: {
-    type: "budget_round",
-    round: 1,
+  budget_fight_2026: {
+    type: "budget_fight",
+    next: "budget_result",
+    rounds: [
+      {
     title: "ROUND 1 — ADMINISTRATIVE",
     prompt: "Low-hanging fruit. Administrative levers — real savings, but each one has a constituency that will notice.",
     options: [
@@ -1208,12 +1210,8 @@ export const SCENES = {
         },
       },
     ],
-    next: "budget_round2",
-  },
-
-  budget_round2: {
-    type: "budget_round",
-    round: 2,
+      },
+      {
     title: "ROUND 2 — REVENUE",
     prompt: "Real money. These measures pick a fight with someone who can afford lawyers.",
     options: [
@@ -1282,12 +1280,8 @@ export const SCENES = {
         },
       },
     ],
-    next: "budget_round3",
-  },
-
-  budget_round3: {
-    type: "budget_round",
-    round: 3,
+      },
+      {
     title: "ROUND 3 — STRUCTURAL REFORM",
     prompt: "The hard calls. These define administrations.",
     options: [
@@ -1351,13 +1345,10 @@ export const SCENES = {
         },
       },
     ],
-    next: (postBudget) => postBudget < 0 ? "budget_crisis" : "budget_result",
-  },
-
-  budget_crisis: {
-    type: "budget_round",
-    round: "CRISIS",
-    urgent: true,
+      },
+    ],
+    crisis: {
+      urgent: true,
     title: "CRISIS — JUNE DEADLINE",
     prompt: "The Council won't pass an unbalanced budget. Albany is calling. Pick your poison.",
     options: [
@@ -1366,7 +1357,7 @@ export const SCENES = {
         label: "Emergency state loan from Hochul",
         delta: 4,
         costLabel: "you'll owe her — and she knows it",
-        available: (s) => !s.flags.owesHochul && s.resources.budget + 4 >= 0,
+        available: (s, proj) => !s.flags.owesHochul && proj + 4 >= 0,
         unavailableReason: (s) => s.flags.owesHochul ? "You already owe Hochul — she won't move" : "Won't close the deficit",
         effect: (s) => {
           s.resources.budget += 4;
@@ -1379,7 +1370,7 @@ export const SCENES = {
         label: "Emergency municipal bond issuance",
         delta: 7,
         costLabel: "future mayors inherit this debt — credit rating takes a hit",
-        available: (s) => s.resources.budget + 7 >= 0,
+        available: (s, proj) => proj + 7 >= 0,
         unavailableReason: "Won't close the deficit",
         effect: (s) => {
           s.resources.budget += 7;
@@ -1391,7 +1382,7 @@ export const SCENES = {
       {
         id: "service_cuts",
         label: "Slash city services — balance the budget at any cost",
-        delta: (s) => Math.max(10, -s.resources.budget),
+        delta: (s, proj) => Math.max(10, -(proj ?? s.resources.budget)),
         costLabel: "at least +10 — deeper deficits mean deeper cuts and worse penalties",
         available: () => true,
         effect: (s) => {
@@ -1413,7 +1404,7 @@ export const SCENES = {
       {
         id: "control_board",
         label: "Refuse the hard choices — let Albany impose a Financial Control Board",
-        delta: (s) => -s.resources.budget,
+        delta: (s, proj) => -(proj ?? s.resources.budget),
         costLabel: "balances the books by surrendering them — nothing like it since 1975",
         available: () => true,
         effect: (s) => {
@@ -1432,7 +1423,7 @@ export const SCENES = {
         label: "Sell city air rights to developers",
         delta: 1,
         costLabel: "ESG supporters furious — YIMBY coalition approves",
-        available: (s) => s.resources.budget + 1 >= 0,
+        available: (s, proj) => proj + 1 >= 0,
         unavailableReason: "Won't close the deficit",
         effect: (s) => {
           s.resources.budget += 1;
@@ -1448,7 +1439,7 @@ export const SCENES = {
         },
       },
     ],
-    next: "budget_result",
+    },
   },
 
   budget_result: {
@@ -2014,8 +2005,10 @@ export const SCENES = {
   },
 
   budget_2027: {
-    type: "budget_round",
-    round: "FY28",
+    type: "budget_fight",
+    next: "budget_2027_result",
+    rounds: [
+      {
     title: "FISCAL YEAR 2028 — ONE BIG CALL",
     prompt: (s) => {
       const bits = [];
@@ -2100,7 +2093,8 @@ export const SCENES = {
         },
       },
     ],
-    next: "budget_2027_result",
+      },
+    ],
   },
 
   budget_2027_result: {
