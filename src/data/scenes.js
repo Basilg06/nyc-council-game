@@ -1461,14 +1461,25 @@ export const SCENES = {
         if (s.flags.soldAirRights) notes.push("The air rights sale was a one-time hit. Housing advocates haven't forgotten.");
         return notes.length ? notes.join(" ") : "No deferred problems on the books — at least not yet.";
       },
-      "But the calendar doesn't stop. June primary is six weeks out. Hochul needs to know where you stand.",
+      "But the calendar doesn't stop. The primary is six weeks out, Hochul needs to know where you stand — and you're booked on Calloway Thursday night. Live. Don't wing it.",
     ],
     choices: [
-      { text: "Look at the primary.", next: "paper_budget" },
+      { text: "Thursday, then.", next: "paper_budget" },
     ],
   },
 
   // ─── Inside City Hall — the Year One sit-down ───
+
+  press_y1_intro: {
+    type: "interstitial",
+    onAir: true,
+    kicker: "NY1 — LIVE FROM THE STUDIO",
+    title: "Inside City Hall",
+    sub: "with Diane Calloway",
+    note: "NO PRE-CLEARED QUESTIONS · SIX MONTHS IN THE CHAIR",
+    buttonText: "YOU'RE ON IN 3… 2…",
+    next: "press_y1_q1",
+  },
 
   press_y1_q1: {
     type: "dialogue", speaker: "calloway",
@@ -1479,7 +1490,11 @@ export const SCENES = {
         if (s.flags.pushedCarr) return "The Speaker fight. You pushed David Carr — a Republican — as a unity candidate, and it collapsed inside a week. What did that experiment tell you about your read on this Council?";
         if (s.flags.backedHudson && s.flags.speakerElected === "hudson") return "The Speaker fight. You built Crystal Hudson's coalition — the first DSA-aligned Speaker in the chamber's history. Business leaders say you handed the legislature to the far left. What do you say to them?";
         if (s.flags.backedHudson) return "The Speaker fight. You went all in for Crystal Hudson and she lost. The Speaker's office now belongs to someone who watched you try. How does anything on your agenda pass this Council?";
-        if (s.flags.backedMenin && s.flags.speakerElected === "menin") return "The Speaker fight. You backed Julie Menin early and she won — with, reporting suggests, some expensive promises made on your behalf. What exactly did this Speakership cost the second floor?";
+        if (s.flags.backedMenin && s.flags.speakerElected === "menin") {
+          const gs = s.flags.groupStatus || {};
+          if (gs.repub === "won") return "The Speaker fight. Menin won comfortably — but the tape shows five Republican votes in her column, and our reporting says they were priced at a committee vice-chair. Why did a race she had in hand end with the GOP holding a chit?";
+          return "The Speaker fight. You backed Julie Menin early and she won walking away — the outcome every smart-money desk in town predicted. The left's read is that you picked the safest horse in the field and called it leadership. So: what's the ambitious version of this mayoralty?";
+        }
         return "The Speaker fight. You backed the losing side, and the gavel went elsewhere. Every mayor needs twenty-six votes eventually. Where do yours come from now?";
       },
     ],
@@ -1913,7 +1928,7 @@ export const SCENES = {
         id: "inb_press",
         label: "NY1 — the year-two sit-down",
         desc: "Calloway's producers have been circling since New Year's. Take it early and shape the narrative, or late and answer for everything.",
-        next: "press_y2_q1",
+        next: "press_y2_intro",
         done: (s) => !!s.flags.pressY2,
       },
     ],
@@ -1925,6 +1940,17 @@ export const SCENES = {
   // ─── Inside City Hall — the Year Two sit-down ───
   // Questions react to whatever the player has already handled this year,
   // so taking the interview early vs. late genuinely changes it.
+
+  press_y2_intro: {
+    type: "interstitial",
+    onAir: true,
+    kicker: "NY1 — LIVE FROM THE STUDIO",
+    title: "Inside City Hall",
+    sub: "the year-two sit-down",
+    note: "SHE'S BEEN ASKING SINCE NEW YEAR'S · NOTHING IS OFF THE TABLE",
+    buttonText: "YOU'RE ON IN 3… 2…",
+    next: "press_y2_q1",
+  },
 
   press_y2_q1: {
     type: "dialogue", speaker: "calloway",
@@ -2828,8 +2854,8 @@ export const SCENES = {
 
   paper_budget: {
     type: "newspaper",
-    next: "press_y1_q1",
-    nextLabel: "SIX WEEKS TO THE PRIMARY",
+    next: "press_y1_intro",
+    nextLabel: "THURSDAY — TO THE NY1 STUDIO",
     stories: [
       {
         headline: (s) => {

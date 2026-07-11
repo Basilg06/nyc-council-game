@@ -39,6 +39,9 @@ export default function SceneView({ state, sceneId, goTo, updateState, onMapPeek
   if (scene.type === "office") {
     return <OfficeScene scene={scene} state={state} goTo={goTo} />;
   }
+  if (scene.type === "interstitial") {
+    return <InterstitialScene scene={scene} state={state} goTo={goTo} />;
+  }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
 }
 
@@ -730,6 +733,37 @@ function GroupNeg({ group, state, updateState, onBack }) {
       <div style={styles.choiceList}>
         <button className="cg-btn" style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
       </div>
+    </div>
+  );
+}
+
+// Full-card title bumper between beats — a TV studio card, an election-night
+// slate, whatever needs a breath instead of a hard cut.
+function InterstitialScene({ scene, state, goTo }) {
+  const resolve = (v) => (typeof v === "function" ? v(state) : v);
+  const mono = { fontFamily: "'Space Mono', monospace" };
+  const serif = { fontFamily: "'Lora', Georgia, serif" };
+  return (
+    <div style={{ ...styles.sceneCard, background: "#070B12", border: "1px solid #16283C", textAlign: "center", padding: "46px 30px 36px", color: "#C8C2B4" }}>
+      <style>{`@keyframes onAirPulse{0%,100%{opacity:1}50%{opacity:0.2}}`}</style>
+      {scene.onAir && (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #5A1A1A", borderRadius: 3, padding: "5px 12px", marginBottom: 22 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#D03030", animation: "onAirPulse 1.2s ease-in-out infinite" }} />
+          <span style={{ ...mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", color: "#D06060" }}>ON AIR</span>
+        </div>
+      )}
+      <div style={{ ...mono, fontSize: 9.5, letterSpacing: "0.24em", color: "#4A7FA5", marginBottom: 14 }}>{resolve(scene.kicker)}</div>
+      <div style={{ ...serif, fontSize: 34, fontWeight: 700, color: "#E8E4D8", lineHeight: 1.1, marginBottom: 12 }}>{resolve(scene.title)}</div>
+      <div style={{ width: 44, height: 2, background: "#C9A227", margin: "0 auto 14px" }} />
+      {scene.sub && <div style={{ ...serif, fontSize: 15, fontStyle: "italic", color: "#8A9AAB", marginBottom: 8 }}>{resolve(scene.sub)}</div>}
+      {scene.note && <div style={{ ...mono, fontSize: 9, letterSpacing: "0.1em", color: "#556677", marginBottom: 26 }}>{resolve(scene.note)}</div>}
+      <button
+        className="cg-btn"
+        onClick={() => goTo(resolve(scene.next), scene.nextEffect)}
+        style={{ ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", borderRadius: 3, padding: "12px 34px", cursor: "pointer" }}
+      >
+        {scene.buttonText || "CONTINUE"} →
+      </button>
     </div>
   );
 }
