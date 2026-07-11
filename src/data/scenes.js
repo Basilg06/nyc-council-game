@@ -2055,76 +2055,7 @@ export const SCENES = {
 
   time_to_fall_2027: {
     type: "time_pass",
-    months: ["July", "August", "September", "October"],
-    year: "2027",
-    next: "october_surprise",
-  },
-
-  october_surprise: {
-    type: "dialogue", speaker: "park", urgent: true,
-    lines: [
-      "Four weeks to the election, and The City just published a story with documents.",
-      "Your Buildings Commissioner — your appointee — accepted Yankees playoff tickets and a $40,000 kitchen renovation from a developer with thirty-one open permits in front of his agency.",
-      "Every council candidate in the city is being asked about it on camera. Whatever you do, do it before the six o'clock news.",
-    ],
-    choices: [
-      {
-        text: "Fire him. Today. Podium at four.",
-        next: "october_surprise_result",
-        effect: (s) => {
-          s.flags.scandal2027 = "fired";
-          s.approval = Math.min(100, s.approval + 3);
-          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 3);
-          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
-          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 4);
-        },
-      },
-      {
-        text: "Suspend him pending investigation. Due process.",
-        next: "october_surprise_result",
-        effect: (s) => {
-          s.flags.scandal2027 = "stood_by";
-          s.approval = Math.max(0, s.approval - 5);
-          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2);
-          s.factionApproval.progressive = Math.max(0, s.factionApproval.progressive - 4);
-          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 3);
-        },
-      },
-      {
-        text: "He resigns tonight 'to spend time with family.' No podium.",
-        next: "october_surprise_result",
-        effect: (s) => {
-          s.flags.scandal2027 = "quiet";
-          s.approval = Math.max(0, s.approval - 1);
-          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 3);
-          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
-          s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 2);
-        },
-      },
-    ],
-  },
-
-  october_surprise_result: {
-    type: "dialogue", speaker: "park",
-    lines: [
-      (s) => {
-        switch (s.flags.scandal2027) {
-          case "fired":    return "The four o'clock podium worked. 'Swift' is the word every columnist used. The establishment thinks you threw one of their own overboard without a trial — they're not wrong — but the story died in a day.";
-          case "stood_by": return "The investigation will take months. The story won't. 'MAYOR STANDS BY TICKET-GATE COMMISSIONER' is on every front page, and four council candidates have already cut ads about it.";
-          case "quiet":    return "The resignation letter went out at 9 PM Friday. No cameras, no questions. The press knows exactly what happened — and the left is asking what else gets handled quietly in this building.";
-          default: return "The story ran its course.";
-        }
-      },
-      "October's gone. It's election season now — nothing left to do but count.",
-    ],
-    choices: [
-      { text: "To November.", next: "time_to_election_2027" },
-    ],
-  },
-
-  time_to_election_2027: {
-    type: "time_pass",
-    months: ["November"],
+    months: ["July", "August", "September", "October", "November"],
     year: "2027",
     next: "election_night_2027",
   },
