@@ -613,7 +613,12 @@ function GroupNeg({ group, state, updateState, onBack }) {
 function OfficeScene({ scene, state, goTo }) {
   const resolve = (v) => (typeof v === "function" ? v(state) : v);
   const items = scene.inbox.filter((it) => !it.show || it.show(state));
-  const allDone = items.every((it) => it.done(state));
+  const doneCount = items.filter((it) => it.done(state)).length;
+  // With maxItems, the player has time for only N of the invitations;
+  // without it, every item must be handled before advancing.
+  const cap = scene.maxItems ? Math.min(scene.maxItems, items.length) : items.length;
+  const capReached = doneCount >= cap;
+  const remaining = cap - doneCount;
   const mono = { fontFamily: "'Space Mono', monospace" };
 
   return (
@@ -623,20 +628,28 @@ function OfficeScene({ scene, state, goTo }) {
           THE MAYOR'S DESK — {scene.month}
         </div>
         <div style={{ fontSize: 13, color: "#C8C0A8", lineHeight: 1.5 }}>{scene.headline}</div>
+        {scene.maxItems && (
+          <div style={{ ...mono, fontSize: 9, color: "#C9A227", letterSpacing: "0.08em", marginTop: 6 }}>
+            TIME FOR {cap} OF {items.length}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: "6px 0" }}>
         {items.map((it) => {
           const done = it.done(state);
+          const outOfTime = !done && capReached;
           return (
-            <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 20px", borderBottom: "1px solid #131C28", opacity: done ? 0.55 : 1 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: done ? "#3A7D55" : "#C9A227", boxShadow: done ? "none" : "0 0 8px rgba(201,162,39,0.5)" }} />
+            <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 20px", borderBottom: "1px solid #131C28", opacity: done || outOfTime ? 0.55 : 1 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: done ? "#3A7D55" : outOfTime ? "#444" : "#C9A227", boxShadow: done || outOfTime ? "none" : "0 0 8px rgba(201,162,39,0.5)" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: done ? "#7A8A7A" : "#DCE8F5", lineHeight: 1.3 }}>{resolve(it.label)}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: done || outOfTime ? "#7A8A7A" : "#DCE8F5", lineHeight: 1.3 }}>{resolve(it.label)}</div>
                 <div style={{ fontSize: 11, color: "#66788A", marginTop: 3, lineHeight: 1.45 }}>{resolve(it.desc)}</div>
               </div>
               {done ? (
                 <span style={{ ...mono, fontSize: 9, letterSpacing: "0.1em", color: "#3A7D55", fontWeight: 700, flexShrink: 0 }}>HANDLED</span>
+              ) : outOfTime ? (
+                <span style={{ ...mono, fontSize: 9, letterSpacing: "0.1em", color: "#555", fontWeight: 700, flexShrink: 0 }}>NO TIME</span>
               ) : (
                 <button
                   className="cg-btn"
@@ -654,11 +667,11 @@ function OfficeScene({ scene, state, goTo }) {
       <div style={{ padding: "14px 20px 18px" }}>
         <button
           className="cg-btn"
-          disabled={!allDone}
+          disabled={!capReached}
           onClick={() => goTo(scene.next, scene.nextEffect)}
-          style={{ ...styles.submitBtn, width: "100%", textAlign: "center", background: allDone ? "#2D5C3E" : "#1A2430", color: allDone ? "#FFFDF8" : "#556677", cursor: allDone ? "pointer" : "not-allowed" }}
+          style={{ ...styles.submitBtn, width: "100%", textAlign: "center", background: capReached ? "#2D5C3E" : "#1A2430", color: capReached ? "#FFFDF8" : "#556677", cursor: capReached ? "pointer" : "not-allowed" }}
         >
-          {allDone ? `${scene.nextLabel} →` : `${items.filter((it) => !it.done(state)).length} ITEM${items.filter((it) => !it.done(state)).length !== 1 ? "S" : ""} STILL ON THE DESK`}
+          {capReached ? `${scene.nextLabel} →` : scene.maxItems ? `CHOOSE ${remaining} MORE` : `${remaining} ITEM${remaining !== 1 ? "S" : ""} STILL ON THE DESK`}
         </button>
       </div>
     </div>

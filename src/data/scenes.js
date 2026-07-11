@@ -241,7 +241,7 @@ export const SCENES = {
     type: "dialogue", speaker: "park", urgent: true,
     lines: [
       "It started on the overnight in the four-eight in the Bronx. By this morning's shift change, sixty-two percent of patrol is out sick citywide.",
-      "The PBA president was on the radio at seven. Quote: 'There's a bug going around. Something about job security.' End quote.",
+      "PBA President Frank Doran was on the radio at seven. Quote: 'There's a bug going around. Something about job security.' End quote.",
       "The Taylor Law makes striking illegal for uniformed officers — so officially, this isn't a strike. It's the flu. Meanwhile response time in Brownsville is forty-one minutes and the tabloids are doing live shots outside empty precinct houses.",
       "You fired their commissioner. This is the answer. How do you respond?",
     ],
@@ -362,7 +362,205 @@ export const SCENES = {
     type: "time_pass",
     months: ["January"],
     year: "2026",
+    next: "desk_jan2026",
+  },
+
+  desk_jan2026: {
+    type: "office",
+    month: "JANUARY 2026",
+    maxItems: 2,
+    headline: "First full week. Everyone in the city wants a piece of your calendar, and the Speaker vote is three weeks out. Time for two of these — choose what kind of mayor you are.",
+    inbox: [
+      {
+        id: "jan_hochul",
+        label: "Albany — the Governor's sit-down",
+        desc: "Hochul asked for this on the congratulations call. Her people have proposed three dates. They're counting.",
+        next: "hochul_sitdown",
+        done: (s) => !!s.flags.metHochul,
+      },
+      {
+        id: "jan_tisch",
+        label: "One Police Plaza — the reform briefing",
+        show: (s) => !s.flags.firedTisch,
+        desc: "Tisch's promised briefing document arrived at 7 AM, tabbed and indexed. She wants an hour to walk you through it.",
+        next: "tisch_briefing",
+        done: (s) => !!s.flags.tischBriefing,
+      },
+      {
+        id: "jan_doran",
+        label: "PBA — Frank Doran wants a meeting",
+        show: (s) => !s.flags.firedTisch,
+        desc: "The union president. The patrol contract expired fourteen months ago, and he'd rather size you up in person.",
+        next: "doran_grievance",
+        done: (s) => !!s.flags.metDoran,
+      },
+      {
+        id: "jan_rats",
+        label: "The rat czar wants five minutes",
+        desc: "The citywide director of rodent mitigation has a pilot program, a slide deck, and — reportedly — props.",
+        next: "rat_czar",
+        done: (s) => !!s.flags.metRatCzar,
+      },
+    ],
     next: "month1_brief",
+    nextLabel: "TO THE SPEAKER FIGHT",
+  },
+
+  hochul_sitdown: {
+    type: "dialogue", speaker: "hochul",
+    lines: [
+      (s) => s.figures.hochul.approval >= 45
+        ? "Thanks for making the time, Mayor. I meant what I said on the phone — this works better when we work it together."
+        : "Mayor. I'll be honest — I wasn't sure this meeting was going to happen. Let's use it.",
+      "Here's my opening: the state has four hundred million in discretionary housing capital that needs a city partner by spring. I'd rather announce it standing next to you than spend it upstate.",
+      "What I need back is simple. When Albany takes a hit in your press room, I need it to be aimed at the legislature — not at me.",
+    ],
+    choices: [
+      {
+        text: "\"Partner on the housing money. And I can live with that arrangement.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metHochul = true;
+          s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 6);
+          s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 3);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 3);
+        },
+      },
+      {
+        text: "\"I'll take the money. The press room stays mine.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metHochul = true;
+          s.figures.hochul.approval = Math.min(100, s.figures.hochul.approval + 1);
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 2);
+        },
+      },
+      {
+        text: "\"Vouchers first. The housing capital is a press release — voucher reform is the ballgame.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metHochul = true;
+          s.figures.hochul.approval = Math.max(0, s.figures.hochul.approval - 4);
+          s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 6);
+          s.groups.wfp.approval = Math.min(100, s.groups.wfp.approval + 3);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 3);
+        },
+      },
+    ],
+  },
+
+  tisch_briefing: {
+    type: "dialogue", speaker: "tisch",
+    lines: [
+      "An hour, as promised. Three things in the folder worth your attention.",
+      "One: precision policing metrics — we can keep crime falling without the stop numbers that get this city sued. Two: a disciplinary docket I want to clear in ninety days, before the union turns it into a siege. Three: overtime. It's a runaway train, and every mayor before you decided it was next year's problem.",
+      "I can execute all three. What I can't do is execute them while being contradicted from the podium. So — do I have the room?",
+    ],
+    choices: [
+      {
+        text: "\"You have the room. All three.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.tischBriefing = true;
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 6);
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 2);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+        },
+      },
+      {
+        text: "\"Run the metrics and the docket. Overtime waits for the budget.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.tischBriefing = true;
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 3);
+        },
+      },
+      {
+        text: "\"I'll read the folder. Don't get ahead of me, Commissioner.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.tischBriefing = true;
+          s.figures.tisch.approval = Math.max(0, s.figures.tisch.approval - 3);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
+        },
+      },
+    ],
+  },
+
+  doran_grievance: {
+    type: "dialogue", speaker: "doran",
+    lines: [
+      "Appreciate the time, Mr. Mayor. I'll skip the flowers.",
+      "My members have worked fourteen months without a contract. Fourteen. The last administration ran out the clock, and the one before that ran out the clock, and every year the academy classes get smaller and the exits get bigger.",
+      "I'm not asking you to sign anything today. I'm asking whether the PBA is dealing with a mayor — or with another clock.",
+    ],
+    choices: [
+      {
+        text: "\"Reopen the contract talks. This quarter.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metDoran = true;
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 6);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
+          s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 2);
+        },
+      },
+      {
+        text: "\"You're dealing with a mayor. After the budget, you're first in line.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metDoran = true;
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 2);
+        },
+      },
+      {
+        text: "\"Every union in this city is in line, Mr. Doran. Get in it.\"",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metDoran = true;
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 5);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 3);
+          s.groups.teamsters.approval = Math.max(0, s.groups.teamsters.approval - 2);
+        },
+      },
+    ],
+  },
+
+  rat_czar: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      "The citywide director of rodent mitigation. Twenty-two minutes, eleven slides, and at one point she produced — from a bag — a model of a sealed curbside container she referred to as 'the future.'",
+      "The ask: $4 million to expand containerized trash to three more community districts. The data's actually good — burrow counts down forty percent in the pilot.",
+      "It's rats, Mr. Mayor. It is also, per the polling, the single most popular thing this government does.",
+    ],
+    choices: [
+      {
+        text: "Fund the expansion. Stand next to the container at the presser.",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metRatCzar = true;
+          s.resources.budget -= 1;
+          s.approval = Math.min(100, s.approval + 3);
+        },
+      },
+      {
+        text: "Fund it quietly. No mayor should be photographed with 'the future.'",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metRatCzar = true;
+          s.resources.budget -= 1;
+          s.approval = Math.min(100, s.approval + 1);
+        },
+      },
+      {
+        text: "Not this quarter. The rats can hold the line until spring.",
+        next: "desk_jan2026",
+        effect: (s) => {
+          s.flags.metRatCzar = true;
+          s.approval = Math.max(0, s.approval - 1);
+        },
+      },
+    ],
   },
 
   month1_brief: {
@@ -1227,6 +1425,125 @@ export const SCENES = {
     ],
   },
 
+  // ─── Inside City Hall — the Year One sit-down ───
+
+  press_y1_q1: {
+    type: "dialogue", speaker: "calloway",
+    lines: [
+      "Mr. Mayor, welcome to Inside City Hall. Six months in — let's get into it.",
+      (s) => {
+        if (s.flags.stayedNeutral) return "The Speaker fight. You stayed out of it entirely — the only mayor in living memory to sit out a Speaker race. Members on both sides called it, and I'm quoting, 'a first-class seat on the fence.' Was it strategy or was it fear?";
+        if (s.flags.pushedCarr) return "The Speaker fight. You pushed David Carr — a Republican — as a unity candidate, and it collapsed inside a week. What did that experiment tell you about your read on this Council?";
+        if (s.flags.backedHudson && s.flags.speakerElected === "hudson") return "The Speaker fight. You built Crystal Hudson's coalition — the first DSA-aligned Speaker in the chamber's history. Business leaders say you handed the legislature to the far left. What do you say to them?";
+        if (s.flags.backedHudson) return "The Speaker fight. You went all in for Crystal Hudson and she lost. The Speaker's office now belongs to someone who watched you try. How does anything on your agenda pass this Council?";
+        if (s.flags.backedMenin && s.flags.speakerElected === "menin") return "The Speaker fight. You backed Julie Menin early and she won — with, reporting suggests, some expensive promises made on your behalf. What exactly did this Speakership cost the second floor?";
+        return "The Speaker fight. You backed the losing side, and the gavel went elsewhere. Every mayor needs twenty-six votes eventually. Where do yours come from now?";
+      },
+    ],
+    choices: [
+      {
+        text: "Own it — the call was right, and I'd make it again.",
+        next: "press_y1_q2",
+        effect: (s) => {
+          s.approval = Math.min(100, s.approval + 2);
+          const won = (s.flags.backedHudson && s.flags.speakerElected === "hudson") || (s.flags.backedMenin && s.flags.speakerElected === "menin");
+          if (!won) s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 2);
+        },
+      },
+      {
+        text: "Deflect — the Council chooses its Speaker, not the Mayor.",
+        next: "press_y1_q2",
+        effect: (s) => {
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2);
+          s.approval = Math.max(0, s.approval - 1);
+        },
+      },
+      {
+        text: "Pivot to results — voters care about what passes, not who holds the gavel.",
+        next: "press_y1_q2",
+        effect: (s) => {
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+        },
+      },
+    ],
+  },
+
+  press_y1_q2: {
+    type: "dialogue", speaker: "calloway",
+    lines: [
+      (s) => {
+        if (s.flags.controlBoard) return "The budget. A state Financial Control Board is running this city's books — the first since 1975. You are, on paper, the least fiscally independent mayor in fifty years. How is that not a resignation-level failure?";
+        if (s.resources.budget < 0) return `The budget. You adopted it ${Math.abs(s.resources.budget)} points out of balance, and the bond market noticed even if the Council didn't. What do you know that Moody's doesn't?`;
+        if (s.flags.deferredPension && s.flags.deferredCapital) return "The budget. Balanced — technically. Our review found deferred capital work and a pension reclassification that three actuaries we called described with words I can't say on air. Is this a balanced budget or a staged photo of one?";
+        if (s.flags.issuedBonds) return "The budget. Balanced — with emergency bonds that every future budget will be paying off. You've been in office six months and you've already borrowed from your successor. Why should voters believe the math ever gets easier?";
+        return "The budget. Balanced, on time, without gimmicks anyone's found — I'll admit our researchers tried. The unions say the quiet part: it balanced on their backs. Whose year was this budget, Mr. Mayor?";
+      },
+    ],
+    choices: [
+      {
+        text: "The math is the math — read the adopted budget.",
+        next: "press_y1_q3",
+        effect: (s) => {
+          if (s.resources.budget >= 0 && !s.flags.controlBoard) { s.approval = Math.min(100, s.approval + 2); s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2); }
+          else s.approval = Math.max(0, s.approval - 2);
+        },
+      },
+      {
+        text: "Be candid — every budget is a set of painful choices, and I made mine in the open.",
+        next: "press_y1_q3",
+        effect: (s) => {
+          s.approval = Math.min(100, s.approval + 1);
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 2);
+        },
+      },
+      {
+        text: "Blame the inheritance — this deficit was on the books before my name was on the door.",
+        next: "press_y1_q3",
+        effect: (s) => {
+          s.approval = Math.max(0, s.approval - 1);
+          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 2);
+        },
+      },
+    ],
+  },
+
+  press_y1_q3: {
+    type: "dialogue", speaker: "calloway",
+    lines: [
+      (s) => {
+        if (s.flags.firedTisch) return "Last one, and it's the one everyone at home is waiting for. You fired a sitting Police Commissioner in your first week and the department answered with the largest job action since 1971. Whatever happens for the rest of your term, that's the first line of the story. Do you accept that?";
+        if (s.flags.owesHochul) return "Last one. Our Albany sources use a specific phrase about you and the Governor: 'the Mayor owes one.' The gubernatorial primary is six weeks out. When she calls in that favor — and she will — what does New York City pay?";
+        return "Last one. The gubernatorial primary is six weeks out, every camp wants your endorsement, and your phone — I'm told — has never been busier. Six months in: is New York City better off than it was in December?";
+      },
+    ],
+    choices: [
+      {
+        text: "Answer it straight, eyes on the lens.",
+        next: "hub_post_budget",
+        effect: (s) => {
+          s.flags.pressY1 = true;
+          s.approval = Math.min(100, s.approval + 3);
+        },
+      },
+      {
+        text: "Give the practiced non-answer. Land no punches, take none.",
+        next: "hub_post_budget",
+        effect: (s) => {
+          s.flags.pressY1 = true;
+        },
+      },
+      {
+        text: "\"We're out of time, Diane.\" Stand up.",
+        next: "hub_post_budget",
+        effect: (s) => {
+          s.flags.pressY1 = true;
+          s.approval = Math.max(0, s.approval - 3);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
+        },
+      },
+    ],
+  },
+
   gov_campaign: {
     type: "hub",
     month: "June 2026",
@@ -1549,10 +1866,99 @@ export const SCENES = {
         effect: (s) => { s.month = 4; s.monthLabel = "April"; },
         done: (s) => !!s.flags.speakerBill,
       },
+      {
+        id: "inb_press",
+        label: "NY1 — the year-two sit-down",
+        desc: "Calloway's producers have been circling since New Year's. Take it early and shape the narrative, or late and answer for everything.",
+        next: "press_y2_q1",
+        done: (s) => !!s.flags.pressY2,
+      },
     ],
     next: "budget_2027",
     nextEffect: (s) => { s.month = 5; s.monthLabel = "May"; },
     nextLabel: "OPEN BUDGET SEASON",
+  },
+
+  // ─── Inside City Hall — the Year Two sit-down ───
+  // Questions react to whatever the player has already handled this year,
+  // so taking the interview early vs. late genuinely changes it.
+
+  press_y2_q1: {
+    type: "dialogue", speaker: "calloway",
+    lines: [
+      "Mr. Mayor. Year two. Let's not waste it on pleasantries.",
+      (s) => {
+        if (s.flags.fedThreat === "defied") return "You told the President of the United States — on a call your own staff leaked — that this city complies with federal law and nothing more. Three billion in grants, frozen. Was the sentence worth the money?";
+        if (s.flags.fedThreat === "negotiated") return "There's a deal with Washington. Nobody will say what's in it — not your office, not theirs — which usually means somebody's ashamed of something. What did you trade, Mr. Mayor?";
+        if (s.flags.fedThreat === "declined") return "The President of the United States called this building, and you didn't pick up. Some voters love that. The ones whose grants got slow-walked love it less. Explain the math to them.";
+        if (s.flags.crisis2027 === "bqe_repaired") return "The BQE. Concrete on the promenade, a deferral memo with your administration's name on it — and then, credit where due, an eleven-day repair the engineers are still praising. Which half of that story is the real one?";
+        if (s.flags.crisis2027 === "bqe_patched") return "The BQE. A forty-foot section failed, and your answer was scaffolding and a study. Every engineer we've spoken to uses the word 'interim' with a very specific tone. When does interim end?";
+        if (s.flags.crisis2027 === "bqe_blamed") return "The BQE. You pointed at Albany, Albany pointed back with your own deferral memo, and the cantilever is still cracked. Who actually fixes the road, Mr. Mayor?";
+        if (s.flags.crisis2027 === "blizzard_hero") return "The blizzard. Twenty-six inches, every street plowed twice, a photo on a salt spreader that your comms shop could not have staged better. Was that governance or was that a campaign ad?";
+        if (s.flags.crisis2027 === "blizzard_manhattan") return "The blizzard. Manhattan was clear by Tuesday. Bayside dug out by Friday. You've seen the 'Tale of Two Cities' coverage — is there a version of this where the outer boroughs aren't second?";
+        if (s.flags.crisis2027 === "blizzard_cheap") return "The blizzard. Nine days of school closures, two water mains, and an ambulance stuck on 164th Street in a video with four million views. What do you say to the family that was in that ambulance?";
+        return "It's February, City Hall has been remarkably quiet, and the desk calendar we obtained shows a stack of meetings you haven't taken yet. The White House, the Speaker, a storm season. What are you waiting for?";
+      },
+    ],
+    choices: [
+      {
+        text: "Take the question head-on.",
+        next: "press_y2_q2",
+        effect: (s) => { s.approval = Math.min(100, s.approval + 2); },
+      },
+      {
+        text: "Reframe it — talk about what the city got, not what it cost.",
+        next: "press_y2_q2",
+        effect: (s) => { s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2); },
+      },
+      {
+        text: "Dispute the premise entirely.",
+        next: "press_y2_q2",
+        effect: (s) => { s.approval = Math.max(0, s.approval - 2); s.factionApproval.farRight = Math.min(100, s.factionApproval.farRight + 1); },
+      },
+    ],
+  },
+
+  press_y2_q2: {
+    type: "dialogue", speaker: "calloway",
+    lines: [
+      (s) => {
+        if (s.flags.newCommissioner) return "Commissioner Vasquez. Four months in, well-liked at One Police Plaza, and every profile mentions the same thing: whose shadow she works in. Do you regret how the Tisch era ended?";
+        if (s.flags.firedTisch) return "One Police Plaza has been run by an interim commissioner for over a year — since the firing, the sick-out, the warehouse. The city's police department is a headless institution in an election year. When does that end?";
+        if (s.flags.speakerBill === "blocked") return "The Speaker brought you their signature bill and your budget office killed it. Fifty-one council seats are on the ballot in November, and the Speaker has a long memory and a whip list. What did blocking it buy you?";
+        if (s.flags.speakerBill === "rtc_backed") return "Right to Counsel — certified by your budget office, cheered by every tenant group in the city, and quietly loathed by the real estate lobby that funds half this town's campaigns. You've picked a side. Say it on camera.";
+        if (s.flags.speakerBill === "sbr_backed") return "The small business package — your OMB scored it, the storefronts love it, and the left says you found money for landlords' tenants but not for NYCHA's. All fifty-one seats vote in November. Whose turnout are you betting on?";
+        return "November. All fifty-one Council seats, two years of your choices on the ballot, and every faction in this city keeping score. Give me the honest version: what does a good night look like?";
+      },
+    ],
+    choices: [
+      {
+        text: "Answer like it's a legacy question — because it is.",
+        next: "office_2027",
+        effect: (s) => {
+          s.flags.pressY2 = true;
+          s.approval = Math.min(100, s.approval + 2);
+        },
+      },
+      {
+        text: "Answer like a candidate — everything routes back to the message.",
+        next: "office_2027",
+        effect: (s) => {
+          s.flags.pressY2 = true;
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2);
+          s.approval = Math.max(0, s.approval - 1);
+        },
+      },
+      {
+        text: "\"Good night, Diane.\" It's a live show — make her cut to break.",
+        next: "office_2027",
+        effect: (s) => {
+          s.flags.pressY2 = true;
+          s.approval = Math.max(0, s.approval - 2);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
+        },
+      },
+    ],
   },
 
   budget_2027: {
@@ -2253,7 +2659,7 @@ export const SCENES = {
   endgame_betrayed: {
     type: "dialogue", speaker: "park", urgent: true,
     lines: [
-      "The PBA president went on Fox an hour ago. He called the task force — quote — 'the backup this city's cops have been begging for since the firings.'",
+      "Frank Doran went on Fox an hour ago. He called the task force — quote — 'the backup this city's cops have been begging for since the firings.'",
       "Precinct commanders are coordinating with federal teams directly. Gang databases, warrant lists, building access. City Hall found out from a press release.",
       "The department you decapitated and the union you broke picked a side tonight. It isn't ours. Six hundred agents become six thousand by spring — and every one of them will have an NYPD guide who knows the block.",
       "There's no version of this where we win the winter. The question is what's still standing by then.",
@@ -2376,7 +2782,7 @@ export const SCENES = {
 
   paper_budget: {
     type: "newspaper",
-    next: "hub_post_budget",
+    next: "press_y1_q1",
     nextLabel: "SIX WEEKS TO THE PRIMARY",
     stories: [
       {

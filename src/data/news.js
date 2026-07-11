@@ -72,8 +72,8 @@ export function getHeadlines(s) {
   if (s.figures.trump.approval >= 40) h.push("WHITE HOUSE CALLS RELATIONSHIP WITH CITY HALL 'PRODUCTIVE'");
   else if (s.figures.trump.approval < 12) h.push("PRESIDENT ATTACKS MAYOR IN LATE-NIGHT POST");
 
-  if (s.groups.pba.approval < 30)      h.push("PBA: 'CITY HALL HAS ABANDONED THE NYPD'");
-  else if (s.groups.pba.approval > 65) h.push("PBA PRESIDENT PRAISES 'PARTNER IN CITY HALL'");
+  if (s.groups.pba.approval < 30)      h.push("DORAN: 'CITY HALL HAS ABANDONED THE NYPD'");
+  else if (s.groups.pba.approval > 65) h.push("DORAN, IN RARE PRAISE: 'A PARTNER IN CITY HALL'");
   if (s.groups.tenantBloc.approval > 65) h.push("TENANT COALITION: 'FINALLY, A MAYOR WHO SHOWS UP'");
   if (s.groups.teamsters.approval < 35)  h.push("TEAMSTERS LOCAL 237 WEIGHS NO-CONFIDENCE VOTE");
 

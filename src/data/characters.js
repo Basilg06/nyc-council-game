@@ -7,4 +7,6 @@ export const CHARACTERS = {
   hudson: { name: "Crystal Hudson",               role: "NYC Council Speaker",                      color: "#7B4FA3",  avatar: "/avatars/hudson.png" },
   menin:  { name: "Julie Menin",                  role: "NYC Council Speaker",                      color: "#2E3F8F" },
   vasquez:{ name: "Comm. Elena Vasquez",          role: "NYPD Police Commissioner",                 color: "#D9C76B" },
+  doran:  { name: "Frank Doran",                  role: "President, Police Benevolent Association",  color: "#8B1A1A" },
+  calloway:{ name: "Diane Calloway",              role: "NY1 — Inside City Hall",                   color: "#1F6E8C" },
 };

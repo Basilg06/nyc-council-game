@@ -9,7 +9,7 @@ npm run dev
 
 ## Current content (demo)
 
-**Year One — 2026:** inauguration calls (Hochul, Trump, Tisch) → Speaker race (back Menin, Hudson, or Carr; whip votes bloc by bloc) → three-round budget fight → governor's primary and general (endorse and campaign).
+**Year One — 2026:** inauguration calls (Hochul, Trump, Tisch — fire her at your peril) → the January desk (four invitations, time for two) → Speaker race (back Menin, Hudson, or Carr; whip votes bloc by bloc) → three-round budget fight → the NY1 sit-down (questions written by your own record) → governor's primary and general (endorse and campaign).
 
 **Year Two — 2027:** the Mayor's desk — three events taken in any order (a crisis that depends on your Year 1 budget, a federal funding showdown with the White House, the Speaker calling in a favor) → the FY28 budget call → summer hub actions → October surprise scandal → **council elections across all 51 districts** → Operation Safeguard endgame → year-end report card.
 
