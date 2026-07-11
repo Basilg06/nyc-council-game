@@ -142,3 +142,52 @@ export function calculateAllDistricts(state) {
     Object.keys(DISTRICT_DATA).map((id) => [id, calculateDistrictWinner(Number(id), state)])
   );
 }
+
+// Mutating variant of applyInfluenceShifts — for use inside scene effects,
+// which operate on a structuredClone draft.
+export function applyInfluenceShiftsMut(actionId, s) {
+  const shifts = INFLUENCE_SHIFTS[actionId];
+  if (!shifts) return;
+  for (const [key, delta] of Object.entries(shifts.groups || {})) {
+    s.influence.groups[key] = Math.max(0, (s.influence.groups[key] ?? 1.0) + delta);
+  }
+  for (const [key, delta] of Object.entries(shifts.factions || {})) {
+    s.influence.factions[key] = Math.max(0, (s.influence.factions[key] ?? 1.0) + delta);
+  }
+}
+
+// Deterministic pool of incoming members for flipped seats.
+const NEW_MEMBER_POOL = [
+  "Maria Delgado", "Sam Okafor", "Rachel Kim", "Tony Russo", "Grace Lin",
+  "Marcus Webb", "Priya Natarajan", "Sean Brennan", "Dolores Vega", "Aaron Blum",
+  "Nia Thompson", "Victor Cruz", "Hannah Katz", "Omar Haddad", "Jenny Park",
+  "Frank DeLuca", "Aisha Bello", "Pete Kowalski", "Sofia Reyes", "Dmitri Volkov",
+];
+
+function countFactions(council) {
+  const counts = {};
+  for (const m of council) counts[m.faction] = (counts[m.faction] || 0) + 1;
+  return counts;
+}
+
+// Run the November 2027 council election against current state.
+// Mutates the draft: flips seats, seats new members, records a summary in flags.
+export function runCouncilElectionMut(s) {
+  const winners = calculateAllDistricts(s);
+  const flips = [];
+  for (const m of s.council) {
+    const w = winners[m.id];
+    if (!w || w === m.faction) continue;
+    // The sitting Speaker doesn't lose their own seat — incumbency aura.
+    if (m.key === "menin" || m.key === "hudson") continue;
+    flips.push({ id: m.id, from: m.faction, to: w, incumbent: m.name });
+    m.faction = w;
+    m.name = NEW_MEMBER_POOL[m.id % NEW_MEMBER_POOL.length];
+    m.named = false;
+  }
+  s.flags.election2027 = {
+    flips,
+    counts: countFactions(s.council),
+  };
+  return flips;
+}

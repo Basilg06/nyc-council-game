@@ -8,6 +8,7 @@ import SeatArc from "./components/SeatArc";
 import Legend from "./components/Legend";
 import CaseFile from "./components/CaseFile";
 import SceneView from "./components/SceneView";
+import NewsTicker from "./components/NewsTicker";
 import styles from "./styles";
 
 function useDrag() {
@@ -100,6 +101,8 @@ export default function App() {
             <Legend majority={majorityCount} minority={minorityCount} />
           </div>
         )}
+
+        {!isMobile && !isChamber && <NewsTicker state={state} />}
 
         <div style={{ ...styles.caseFileOverlay, width: isMobile ? "min(220px, calc(100vw - 32px))" : 260 }}>
           <CaseFile state={state} />
@@ -477,7 +480,8 @@ function PhoneCallPanel({ scene, state, goTo, updateState, isMobile }) {
   const [responseVisible, setResponseVisible] = useState(false);
   const { pos, ref: panelRef, onMouseDown: onHeaderMouseDown } = useDrag();
   const scrollRef = useRef(null);
-  const c = CHARACTERS[scene.speaker];
+  const speakerKey = typeof scene.speaker === "function" ? scene.speaker(state) : scene.speaker;
+  const c = CHARACTERS[speakerKey];
 
   const turns = scene.turns || [{ lines: scene.lines, choices: scene.choices }];
   const turn = turns[turnIdx];

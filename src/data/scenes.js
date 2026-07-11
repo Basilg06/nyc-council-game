@@ -1,3 +1,5 @@
+import { runCouncilElectionMut } from "./elections";
+
 function adj(s, deltas) {
   for (const [k, d] of Object.entries(deltas)) {
     s.factionApproval[k] = Math.max(0, Math.min(100, s.factionApproval[k] + d));
@@ -1273,8 +1275,502 @@ export const SCENES = {
           return "You backed Hochul and she lost. The new governor knows where you stood. Starting from zero.";
         return "You didn't back the winner, but you're not toxic either. The relationship is transactional from here.";
       },
-      "— END OF DEMO —",
+      "Year one is in the books. Take the holidays. Year two won't wait.",
     ],
-    choices: [],
+    choices: [
+      {
+        text: "On to 2027.",
+        next: "time_to_2027",
+        effect: (s) => { s.month = 11; s.monthLabel = "November"; },
+      },
+    ],
+  },
+
+  // ═══════════════════════ YEAR TWO — 2027 ═══════════════════════
+
+  time_to_2027: {
+    type: "time_pass",
+    months: ["December", "January"],
+    year: "2026 → 2027",
+    next: "year2_brief",
+  },
+
+  year2_brief: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      "Happy New Year, Mr. Mayor. Year two.",
+      (s) => {
+        const notes = [];
+        if (s.flags.deferredCapital) notes.push("the capital work we deferred is still deferred");
+        if (s.flags.deferredPension) notes.push("the pension paper is still where we left it");
+        if (s.flags.issuedBonds)     notes.push("first bond service payment hits in April");
+        return notes.length
+          ? `The books carried over — and so did the fine print: ${notes.join(", ")}.`
+          : "Clean books, no skeletons. That's rarer than you know in this building.";
+      },
+      "Council elections are in November. All fifty-one seats. Everything you do this year is on that ballot, whether you like it or not.",
+      "One more thing — there's a situation developing. You'll want to hear this standing up.",
+    ],
+    choices: [
+      {
+        text: "What is it?",
+        show: (s) => s.flags.deferredCapital,
+        next: "crisis_bqe",
+        effect: (s) => { s.month = 2; s.monthLabel = "February"; },
+      },
+      {
+        text: "What is it?",
+        show: (s) => !s.flags.deferredCapital,
+        next: "crisis_blizzard",
+        effect: (s) => { s.month = 2; s.monthLabel = "February"; },
+      },
+    ],
+  },
+
+  crisis_bqe: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "At 6:40 this morning a forty-foot section of the BQE cantilever in Brooklyn Heights dropped concrete onto the promenade below. No injuries — a jogger cleared the area ninety seconds earlier.",
+      "The stabilization work on that stretch was in the capital plan. It was one of the projects we deferred to balance the budget.",
+      "The Post already has the memo. Their headline is one word: 'DEFERRED.'",
+      "DOT says we have three options. None of them are good.",
+    ],
+    choices: [
+      {
+        text: "Full emergency repair. Whatever it costs.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.resources.budget -= 4;
+          s.flags.crisis2027 = "bqe_repaired";
+          s.approval = Math.min(100, s.approval + 4);
+          s.groups.openNY.approval = Math.min(100, s.groups.openNY.approval + 6);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 4);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+        },
+      },
+      {
+        text: "Shore it up, fence it off, study it. Cheap.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.resources.budget -= 1;
+          s.flags.crisis2027 = "bqe_patched";
+          s.approval = Math.max(0, s.approval - 3);
+          s.groups.openNY.approval = Math.max(0, s.groups.openNY.approval - 5);
+          s.factionApproval.progressive = Math.max(0, s.factionApproval.progressive - 3);
+        },
+      },
+      {
+        text: "The BQE is a state road. Put this on Albany.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.flags.crisis2027 = "bqe_blamed";
+          s.approval = Math.min(100, s.approval + 1);
+          s.figures.hochul.approval = Math.max(0, s.figures.hochul.approval - 8);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 4);
+          s.factionApproval.farRight = Math.min(100, s.factionApproval.farRight + 3);
+        },
+      },
+    ],
+  },
+
+  crisis_blizzard: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "Nor'easter. Twenty-six inches in eighteen hours — the biggest February storm since 2010. Sanitation is calling it a two-borough problem: Queens and Staten Island are buried.",
+      "Every mayor gets one snowstorm. Lindsay never recovered from his. De Blasio got dragged for a golf-cart photo. This one is yours.",
+      "OEM needs a posture in the next hour.",
+    ],
+    choices: [
+      {
+        text: "Full mobilization. Every plow, every borough, overtime unlimited.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.resources.budget -= 2;
+          s.flags.crisis2027 = "blizzard_hero";
+          s.approval = Math.min(100, s.approval + 6);
+          s.groups.teamsters.approval = Math.min(100, s.groups.teamsters.approval + 5);
+          s.factionApproval.republican = Math.min(100, s.factionApproval.republican + 3);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+        },
+      },
+      {
+        text: "Prioritize Manhattan arteries and hospital corridors first.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.resources.budget -= 1;
+          s.flags.crisis2027 = "blizzard_manhattan";
+          s.approval = Math.max(0, s.approval - 2);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 3);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 4);
+          s.factionApproval.felder = Math.max(0, s.factionApproval.felder - 3);
+          s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 4);
+        },
+      },
+      {
+        text: "Standard response. It's snow — it melts.",
+        next: "crisis_result",
+        effect: (s) => {
+          s.flags.crisis2027 = "blizzard_cheap";
+          s.approval = Math.max(0, s.approval - 8);
+          s.groups.teamsters.approval = Math.max(0, s.groups.teamsters.approval - 4);
+          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 4);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 5);
+        },
+      },
+    ],
+  },
+
+  crisis_result: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      (s) => {
+        switch (s.flags.crisis2027) {
+          case "bqe_repaired":   return "Crews worked around the clock for eleven days. The cantilever is stable, the promenade is open, and the tabloids moved on. Expensive — but nobody's running attack ads about a bridge you fixed.";
+          case "bqe_patched":    return "The shoring went up in a week. DOT calls it 'interim.' Everyone at the table knows 'interim' means 'until after the election.' The engineers' report is sealed — for now.";
+          case "bqe_blamed":     return "Albany fired back within the hour — the Governor's office released the city's own deferral memo. The lawyers are billing. The cantilever is still cracked.";
+          case "blizzard_hero":  return "Seventy-two hours, every street plowed twice. The Daily News ran a photo of you on a salt spreader in Middle Village. Outer-borough approval hasn't looked like this in years.";
+          case "blizzard_manhattan": return "Manhattan was clear by Tuesday. Bayside dug itself out by Friday. The 'Tale of Two Cities' segments wrote themselves. Queens will remember this in November.";
+          case "blizzard_cheap": return "It didn't melt. It froze, thawed, and froze again. Nine days of school closures, two water main breaks, and a viral video of an ambulance stuck on 164th Street. That one's going to follow you.";
+          default: return "The situation resolved.";
+        }
+      },
+      "Next item. The White House has been calling the switchboard since Thursday. The President wants to talk to you directly.",
+    ],
+    choices: [
+      {
+        text: "Put him through.",
+        next: "call_trump_2027",
+        effect: (s) => { s.month = 3; s.monthLabel = "March"; },
+      },
+    ],
+  },
+
+  call_trump_2027: {
+    type: "phone_call", speaker: "trump",
+    decline: {
+      next: "call_speaker_2027",
+      effect: (s) => {
+        s.flags.fedThreat = "declined";
+        s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 10);
+        s.resources.budget -= 2;
+        s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 5);
+        s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 4);
+        s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 5);
+      },
+    },
+    turns: [
+      {
+        lines: [
+          '"I\'m hearing things about your city."',
+          '"Bad things. Very bad things."',
+        ],
+        choices: [
+          { text: '"What can I do for you, Mr. President?"' },
+          { text: '"..."' },
+        ],
+      },
+      {
+        lines: [
+          '"Your sanctuary nonsense. My people tell me I can pull three billion in federal grants — like that."',
+          '"So here\'s what\'s going to happen. You\'re going to start cooperating with ICE, and everything stays nice and friendly."',
+        ],
+        choices: [
+          {
+            text: '"The city complies with federal law. Nothing more."',
+            effect: (s) => {
+              s.flags.fedThreat = "defied";
+              s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 6);
+              s.resources.budget -= 3;
+              s.approval = Math.min(100, s.approval + 3);
+              s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 6);
+              s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 5);
+              s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 4);
+              s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 5);
+            },
+          },
+          {
+            text: '"Let\'s talk. Quietly."',
+            effect: (s) => {
+              s.flags.fedThreat = "negotiated";
+              s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 5);
+              s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+              s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 8);
+              s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 6);
+              s.factionApproval.progressive = Math.max(0, s.factionApproval.progressive - 4);
+            },
+          },
+          {
+            text: '"..."',
+            effect: (s) => {
+              s.flags.fedThreat = "stonewalled";
+              s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 3);
+            },
+          },
+        ],
+      },
+      {
+        lines: [
+          (s) => s.flags.fedThreat === "negotiated"
+            ? '"Smart. Very smart. My people will call your people."'
+            : s.flags.fedThreat === "defied"
+              ? '"Wrong answer. We\'ll see how long that lasts."'
+              : '"The silent treatment. Okay. Okay. We\'ll do it the other way."',
+        ],
+        choices: [
+          { text: '"Goodbye, Mr. President."', next: "call_speaker_2027" },
+        ],
+      },
+    ],
+  },
+
+  call_speaker_2027: {
+    type: "phone_call",
+    speaker: (s) => (s.flags.speakerElected === "hudson" ? "hudson" : "menin"),
+    turns: [
+      {
+        lines: [
+          (s) => {
+            const madeThem = (s.flags.speakerElected === "hudson" && s.flags.backedHudson) ||
+                             (s.flags.speakerElected === "menin" && s.flags.backedMenin);
+            if (madeThem) return s.flags.speakerElected === "hudson"
+              ? "Mayor. I still remember who built my coalition — so I'm bringing this to you before it leaks."
+              : "Mayor. You had my back in January — I'm returning the courtesy before this hits the press.";
+            return s.flags.speakerElected === "hudson"
+              ? "Mayor. We haven't talked much this year. That's been deliberate — on both sides. But this one requires a conversation."
+              : "Mayor. I'll be brief — we don't need to pretend this is a social call.";
+          },
+          (s) => s.flags.speakerElected === "hudson"
+            ? "The Council is moving a Right to Counsel expansion — a lawyer for every tenant facing eviction, citywide. I have the votes to pass it. What I need is your budget office to certify the funding instead of fighting me."
+            : "I'm moving a small business relief package — tax abatements for storefronts, expedited permitting, the works. I have the votes. What I need is your OMB to score it honestly instead of burying it.",
+        ],
+        choices: [
+          {
+            text: '"Certify it. Let\'s get it done."',
+            effect: (s) => {
+              s.resources.budget -= 2;
+              s.figures.speaker.approval = Math.min(100, s.figures.speaker.approval + 10);
+              if (s.flags.speakerElected === "hudson") {
+                s.flags.speakerBill = "rtc_backed";
+                s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 8);
+                s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 5);
+                s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 5);
+                s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 3);
+              } else {
+                s.flags.speakerBill = "sbr_backed";
+                s.groups.smallBusiness.approval = Math.min(100, s.groups.smallBusiness.approval + 8);
+                s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 5);
+                s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 4);
+                s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
+              }
+            },
+          },
+          {
+            text: '"My budget office scores what the numbers say. No promises."',
+            effect: (s) => {
+              s.flags.speakerBill = "neutral";
+              s.figures.speaker.approval = Math.max(0, s.figures.speaker.approval - 4);
+            },
+          },
+          {
+            text: '"Not this year. The budget can\'t carry it."',
+            effect: (s) => {
+              s.flags.speakerBill = "blocked";
+              s.figures.speaker.approval = Math.max(0, s.figures.speaker.approval - 12);
+              if (s.flags.speakerElected === "hudson") {
+                s.groups.tenantBloc.approval = Math.max(0, s.groups.tenantBloc.approval - 6);
+                s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 6);
+                s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 5);
+                s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+              } else {
+                s.groups.smallBusiness.approval = Math.max(0, s.groups.smallBusiness.approval - 6);
+                s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 5);
+                s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 4);
+                s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
+              }
+            },
+          },
+        ],
+      },
+      {
+        lines: [
+          (s) => {
+            if (s.flags.speakerBill === "rtc_backed") return "Good. Tenants remember who showed up. So do I.";
+            if (s.flags.speakerBill === "sbr_backed") return "Good. The storefronts remember who showed up. So do I.";
+            if (s.flags.speakerBill === "neutral")    return "The numbers. Right. Well — we'll see what the numbers say when you need twenty-six votes for something.";
+            return "Noted, Mr. Mayor. I hope the budget can carry the next thing you need from this Council.";
+          },
+        ],
+        choices: [
+          {
+            text: '"Talk soon, Speaker."',
+            next: "hub_2027",
+            effect: (s) => { s.month = 5; s.monthLabel = "May"; },
+          },
+        ],
+      },
+    ],
+  },
+
+  hub_2027: {
+    type: "hub",
+    month: "May 2027",
+    headline: "Council elections in six months. All 51 seats. Where you spend the summer decides who's mobilized in November.",
+    nextLabel: "Head to November",
+    next: "time_to_election_2027",
+    maxActions: 2,
+    actions: [
+      {
+        id: "y2_nycha",
+        label: "NYCHA repair blitz",
+        location: { x: 538, y: 218, name: "South Bronx" },
+        description: "Emergency elevator and boiler repairs across 40 developments. Tenants notice. Costs real money.",
+        effect: (s) => {
+          s.resources.budget -= 2;
+          s.groups.tenantBloc.approval = Math.min(100, s.groups.tenantBloc.approval + 9);
+          s.influence.groups.tenantBloc = (s.influence.groups.tenantBloc ?? 1.0) + 0.2;
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 3);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 3);
+        },
+      },
+      {
+        id: "y2_precinct",
+        label: "Precinct ride-alongs",
+        location: { x: 770, y: 462, name: "Southeast Queens" },
+        description: "A month of Friday nights with patrol commands in high-crime precincts. The PBA mobilizes for allies.",
+        effect: (s) => {
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 9);
+          s.influence.groups.pba = (s.influence.groups.pba ?? 1.0) + 0.2;
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 4);
+          s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 3);
+        },
+      },
+      {
+        id: "y2_climate",
+        label: "Rockaways resiliency tour",
+        location: { x: 672, y: 560, name: "The Rockaways" },
+        description: "Walk the new dune line with coastal engineers and Open NY. Climate money is popular everywhere it lands.",
+        effect: (s) => {
+          s.groups.openNY.approval = Math.min(100, s.groups.openNY.approval + 8);
+          s.influence.groups.openNY = (s.influence.groups.openNY ?? 1.0) + 0.2;
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 4);
+          s.approval = Math.min(100, s.approval + 2);
+        },
+      },
+      {
+        id: "y2_smallbiz",
+        label: "Small business week",
+        location: { x: 700, y: 355, name: "Flushing, Queens" },
+        description: "Storefront tours, permit-fast-track announcements, ribbon cuttings. The BID coalition turns out its members.",
+        effect: (s) => {
+          s.groups.smallBusiness.approval = Math.min(100, s.groups.smallBusiness.approval + 9);
+          s.influence.groups.smallBusiness = (s.influence.groups.smallBusiness ?? 1.0) + 0.2;
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 4);
+          s.factionApproval.felder = Math.min(100, s.factionApproval.felder + 3);
+        },
+      },
+      {
+        id: "y2_labor",
+        label: "Union hall circuit",
+        location: { x: 618, y: 282, name: "Hunts Point, Bronx" },
+        description: "Teamsters, building trades, 32BJ. Labor's ground game is the best in the city — if it's working for you.",
+        effect: (s) => {
+          s.groups.teamsters.approval = Math.min(100, s.groups.teamsters.approval + 9);
+          s.influence.groups.teamsters = (s.influence.groups.teamsters ?? 1.0) + 0.2;
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 3);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 3);
+        },
+      },
+      {
+        id: "y2_wfp",
+        label: "WFP field program",
+        location: { x: 530, y: 465, name: "Crown Heights" },
+        description: "Fund the canvass. WFP's volunteers knock every door in the contested districts — for whoever they believe in.",
+        effect: (s) => {
+          s.groups.wfp.approval = Math.min(100, s.groups.wfp.approval + 9);
+          s.influence.groups.wfp = (s.influence.groups.wfp ?? 1.0) + 0.2;
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 3);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 4);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 3);
+        },
+      },
+    ],
+  },
+
+  time_to_election_2027: {
+    type: "time_pass",
+    months: ["June", "July", "August", "September", "October", "November"],
+    year: "2027",
+    next: "election_night_2027",
+  },
+
+  election_night_2027: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      "November 2, 2027. Election night.",
+      "Fifty-one districts. Two years of your choices on the ballot — the budget, the storm, the White House, all of it.",
+      "The first returns close at nine.",
+    ],
+    choices: [
+      {
+        text: "Watch the returns.",
+        next: "election_results_2027",
+        effect: (s) => { runCouncilElectionMut(s); },
+      },
+    ],
+  },
+
+  election_results_2027: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      (s) => {
+        const e = s.flags.election2027;
+        if (!e || e.flips.length === 0) return "Every coalition held. Fifty-one incumbent factions defended their ground — the first status-quo election in twenty years. Boring is a kind of verdict too.";
+        const gains = {};
+        for (const fl of e.flips) {
+          gains[fl.to] = (gains[fl.to] || 0) + 1;
+          gains[fl.from] = (gains[fl.from] || 0) - 1;
+        }
+        const names = { dsa: "DSA", leftWfp: "Left-WFP", progressive: "progressives", establishment: "the establishment", centrist: "centrists", felder: "Felder", republican: "Republicans", farRight: "the far right" };
+        const winners = Object.entries(gains).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+        const losers  = Object.entries(gains).filter(([, n]) => n < 0).sort((a, b) => a[1] - b[1]);
+        const wTxt = winners.map(([f, n]) => `${names[f]} +${n}`).join(", ");
+        const lTxt = losers.map(([f, n]) => `${names[f]} ${n}`).join(", ");
+        return `${e.flips.length} seat${e.flips.length !== 1 ? "s" : ""} changed hands tonight. Winners: ${wTxt}. Losers: ${lTxt}.`;
+      },
+      (s) => {
+        const c = s.flags.election2027?.counts || {};
+        const gop = (c.republican || 0) + (c.farRight || 0);
+        const left = (c.dsa || 0) + (c.leftWfp || 0);
+        return `The new math: ${51 - gop} Democratic seats, ${gop} Republican. The left bloc holds ${left}. Every bill you need next year starts from these numbers.`;
+      },
+      (s) => {
+        const e = s.flags.election2027;
+        const myGuy = s.flags.speakerElected;
+        if (!e) return "The Speaker's office is quiet tonight.";
+        const leftGain = e.flips.filter((f) => ["dsa", "leftWfp"].includes(f.to)).length - e.flips.filter((f) => ["dsa", "leftWfp"].includes(f.from)).length;
+        if (myGuy === "hudson") {
+          return leftGain > 0
+            ? "Hudson's wing grew tonight. Her speakership — and your alliance with it — just got stronger."
+            : leftGain < 0
+              ? "Hudson's wing shrank. She'll need you more next year — or she'll need someone to blame."
+              : "Hudson's numbers held. Steady as she goes.";
+        }
+        return leftGain > 0
+          ? "The left grew tonight. Menin's coalition will feel the squeeze — and so will anything you try to pass through the middle."
+          : "Menin's center held. The establishment machine still turns.";
+      },
+    ],
+    choices: [
+      {
+        text: "The year winds down.",
+        next: "year2_report",
+        effect: (s) => { s.month = 12; s.monthLabel = "December"; },
+      },
+    ],
+  },
+
+  year2_report: {
+    type: "report",
   },
 };

@@ -11,7 +11,7 @@ const styles = {
   mapSvg:               { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "block" },
   seatArcWidget:        { position: "absolute", top: 16, left: 16, width: 280, background: "rgba(15,15,18,0.82)", border: "1px solid #3A3A40", borderRadius: 6, padding: "10px 12px 8px", backdropFilter: "blur(4px)", zIndex: 5 },
   seatArcWidgetHeader:  { fontFamily: "'Space Mono', monospace", fontSize: 9.5, letterSpacing: "0.12em", color: "#C9A227", marginBottom: 4 },
-  legendOverlay:        { position: "absolute", bottom: 16, left: 16, background: "rgba(15,15,18,0.82)", border: "1px solid #3A3A40", borderRadius: 6, padding: "12px 16px", backdropFilter: "blur(4px)", zIndex: 5 },
+  legendOverlay:        { position: "absolute", bottom: 42, left: 16, background: "rgba(15,15,18,0.82)", border: "1px solid #3A3A40", borderRadius: 6, padding: "12px 16px", backdropFilter: "blur(4px)", zIndex: 5 },
   caseFileOverlay:      { position: "absolute", top: 16, right: 16, width: 260, zIndex: 25 },
   chamberPromptOverlay: { position: "absolute", bottom: 90, left: "50%", transform: "translateX(-50%)", background: "rgba(15,15,18,0.85)", border: "1px solid #3A3A40", borderRadius: 6, padding: "8px 16px", fontSize: 13.5, fontStyle: "italic", color: "#C8C4B8", zIndex: 5, whiteSpace: "nowrap" },
   legendWrap:           { display: "flex", gap: 20, flexWrap: "wrap" },

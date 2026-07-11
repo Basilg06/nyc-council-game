@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { CHARACTERS } from "../data/characters";
 import { SCENES } from "../data/scenes";
+import { FACTIONS } from "../data/council";
+import { applyInfluenceShiftsMut } from "../data/elections";
 import styles from "../styles";
 
 export default function SceneView({ state, sceneId, goTo, updateState }) {
@@ -26,6 +28,9 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
   }
   if (scene.type === "phone_call") {
     return <PhoneCallScene key={sceneId} scene={scene} state={state} goTo={goTo} />;
+  }
+  if (scene.type === "report") {
+    return <ReportScene scene={scene} state={state} />;
   }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
 }
@@ -206,11 +211,12 @@ function PhoneCallChat({ c, scene, state, choices, goTo }) {
 function DialogueScene({ scene, state, goTo }) {
   const c = CHARACTERS[scene.speaker];
   const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
+  const headerBg = scene.urgent ? "#8B1A1A" : c.color;
   return (
     <div style={styles.sceneCard}>
-      <div style={{ ...styles.speakerTag, background: c.color }}>
-        <div style={styles.speakerName}>{c.name}</div>
-        <div style={styles.speakerRole}>{c.role}</div>
+      <div style={{ ...styles.speakerTag, background: headerBg }}>
+        <div style={styles.speakerName}>{scene.urgent ? "⚠ " : ""}{c.name}</div>
+        <div style={styles.speakerRole}>{scene.urgent ? "EMERGENCY BRIEFING" : c.role}</div>
       </div>
       <div style={styles.transcriptText}>
         {scene.lines.map((l, i) => {
@@ -428,7 +434,9 @@ function BudgetRoundScene({ scene, state, goTo }) {
     const opt = scene.options.find((o) => o.id === selected);
     const postBudget = state.resources.budget + effectiveDelta(opt);
     const nextId = typeof scene.next === "function" ? scene.next(postBudget, state) : scene.next;
-    goTo(nextId, opt.effect);
+    // Budget choices also mobilize/demobilize constituencies — this feeds
+    // the hidden election engine come November 2027.
+    goTo(nextId, (s) => { opt.effect(s); applyInfluenceShiftsMut(opt.id, s); });
   }
 
   const headerBg = scene.urgent ? "#8B1A1A" : "#1C2B4A";
@@ -587,6 +595,133 @@ function GroupNeg({ group, state, updateState, onBack }) {
       </div>
       <div style={styles.choiceList}>
         <button style={styles.submitBtn} onClick={submit}>PRESENT OFFER →</button>
+      </div>
+    </div>
+  );
+}
+
+function ReportScene({ scene, state }) {
+  const f = state.flags;
+  const b = state.resources.budget;
+
+  // Coalition buckets
+  const seats = { left: 0, progressive: 0, establishment: 0, gop: 0 };
+  for (const m of state.council) {
+    if (m.faction === "dsa" || m.faction === "leftWfp") seats.left++;
+    else if (m.faction === "progressive") seats.progressive++;
+    else if (m.faction === "republican" || m.faction === "farRight") seats.gop++;
+    else seats.establishment++;
+  }
+  const demSeats = 51 - seats.gop;
+
+  // Grade
+  let score = 0;
+  if (b >= 0) score += 2; else if (b >= -5) score += 1;
+  if (state.approval >= 55) score += 2; else if (state.approval >= 45) score += 1;
+  if (demSeats >= 38) score += 2; else if (demSeats >= 33) score += 1;
+  if (f.crisis2027 === "bqe_repaired" || f.crisis2027 === "blizzard_hero") score += 1;
+  if (f.fedThreat === "defied" || f.fedThreat === "negotiated") score += 1;
+  const GRADES = ["F", "D", "C", "C+", "B", "B+", "A-", "A", "A+"];
+  const grade = GRADES[Math.min(score, GRADES.length - 1)];
+  const gradeColor = score >= 6 ? "#2D5C3E" : score >= 3 ? "#C9A227" : "#8B1A1A";
+
+  // Ledger
+  const ledger = [];
+  if (f.speakerElected) ledger.push(`Speaker ${f.speakerElected === "hudson" ? "Hudson" : "Menin"} runs the Council${(f.backedHudson && f.speakerElected === "hudson") || (f.backedMenin && f.speakerElected === "menin") ? " — and owes you for it" : ""}.`);
+  if (f.govWinner) {
+    const g = { hochul: "Hochul held Albany", delgado: "Delgado took Albany", salazar: "Salazar took Albany", blakeman: "Blakeman took Albany for the GOP" }[f.govWinner];
+    ledger.push(`${g}${f.endorsedGov === f.govWinner ? " — with your endorsement" : f.endorsedGov ? " — you backed someone else" : ""}.`);
+  }
+  if (f.crisis2027 === "bqe_repaired")  ledger.push("The BQE collapse was met with a full emergency repair.");
+  if (f.crisis2027 === "bqe_patched")   ledger.push("The BQE is held together with temporary shoring. Engineers are watching.");
+  if (f.crisis2027 === "bqe_blamed")    ledger.push("You blamed Albany for the BQE. The lawsuits continue.");
+  if (f.crisis2027 === "blizzard_hero") ledger.push("The February blizzard response won you the outer boroughs.");
+  if (f.crisis2027 === "blizzard_manhattan") ledger.push("Queens remembers the plow map.");
+  if (f.crisis2027 === "blizzard_cheap") ledger.push("The storm response was a disaster. It's in every opponent's file.");
+  if (f.fedThreat === "defied")     ledger.push("You defied the White House on immigration. Federal grants are frozen.");
+  if (f.fedThreat === "negotiated") ledger.push("You cut a quiet deal with Washington. The left hasn't forgiven it.");
+  if (f.fedThreat === "declined")   ledger.push("You declined the President's call. He noticed.");
+  if (f.deferredPension) ledger.push("The pension reclassification is still ticking. Year three will find it.");
+  if (f.issuedBonds)     ledger.push("The emergency bonds closed one gap and opened another — debt service starts now.");
+  if (f.election2027) {
+    const n = f.election2027.flips.length;
+    ledger.push(n > 0 ? `The 2027 council election flipped ${n} seat${n !== 1 ? "s" : ""}.` : "Every council coalition held its ground in November.");
+  }
+
+  const relRows = [
+    ["Gov. relations", state.figures.hochul.approval],
+    ["White House", state.figures.trump.approval],
+    ["The Speaker", state.figures.speaker.approval],
+    ["NYPD Comm.", state.figures.tisch.approval],
+  ];
+
+  const mono = { fontFamily: "'Space Mono', monospace" };
+
+  return (
+    <div style={{ ...styles.sceneCard, background: "#0D1117", border: "1px solid #1E2D3D", color: "#C8C2B4" }}>
+      <div style={{ padding: "20px 24px 14px", borderBottom: "1px solid #1E2D3D", display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ ...mono, fontSize: 9, color: "#4A7FA5", letterSpacing: "0.18em", marginBottom: 5 }}>DECEMBER 2027 — MID-TERM REPORT CARD</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#E8E4D8" }}>Two Years In</div>
+        </div>
+        <div style={{ width: 64, height: 64, border: `2px solid ${gradeColor}`, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", ...mono, fontSize: 26, fontWeight: 700, color: gradeColor, flexShrink: 0 }}>
+          {grade}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+        <div style={{ padding: "14px 20px", borderRight: "1px solid #1E2D3D", borderBottom: "1px solid #1E2D3D" }}>
+          <div style={{ ...mono, fontSize: 8.5, color: "#4A7FA5", letterSpacing: "0.14em", marginBottom: 8 }}>PUBLIC APPROVAL</div>
+          <div style={{ ...mono, fontSize: 30, fontWeight: 700, color: state.approval >= 50 ? "#5FAF7E" : "#D07070" }}>{state.approval}%</div>
+        </div>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E2D3D" }}>
+          <div style={{ ...mono, fontSize: 8.5, color: "#4A7FA5", letterSpacing: "0.14em", marginBottom: 8 }}>BUDGET POSITION</div>
+          <div style={{ ...mono, fontSize: 30, fontWeight: 700, color: b >= 0 ? "#5FAF7E" : "#D07070" }}>{b > 0 ? "+" : ""}{b} pts</div>
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E2D3D" }}>
+        <div style={{ ...mono, fontSize: 8.5, color: "#4A7FA5", letterSpacing: "0.14em", marginBottom: 10 }}>COUNCIL AFTER NOVEMBER 2027</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[
+            ["LEFT", seats.left, FACTIONS.dsa.color],
+            ["PROG", seats.progressive, FACTIONS.progressive.color],
+            ["EST/CTR", seats.establishment, FACTIONS.establishment.color],
+            ["GOP", seats.gop, FACTIONS.republican.color],
+          ].map(([label, n, color]) => (
+            <div key={label} style={{ flex: 1, background: "#111820", border: "1px solid #1E3050", borderRadius: 3, padding: "8px 0", textAlign: "center" }}>
+              <div style={{ ...mono, fontSize: 20, fontWeight: 700, color }}>{n}</div>
+              <div style={{ ...mono, fontSize: 8, color: "#667788", letterSpacing: "0.1em", marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E2D3D" }}>
+        <div style={{ ...mono, fontSize: 8.5, color: "#4A7FA5", letterSpacing: "0.14em", marginBottom: 10 }}>RELATIONSHIPS</div>
+        {relRows.map(([name, val]) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <div style={{ ...mono, fontSize: 9.5, color: "#8A9AAB", width: 110, flexShrink: 0 }}>{name}</div>
+            <div style={{ flex: 1, height: 6, background: "#1A2535", borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${val}%`, background: val >= 55 ? "#5FAF7E" : val >= 35 ? "#C9A227" : "#D07070" }} />
+            </div>
+            <div style={{ ...mono, fontSize: 9.5, color: "#667788", width: 26, textAlign: "right" }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: "14px 20px 12px" }}>
+        <div style={{ ...mono, fontSize: 8.5, color: "#4A7FA5", letterSpacing: "0.14em", marginBottom: 10 }}>THE LEDGER</div>
+        {ledger.map((line, i) => (
+          <div key={i} style={{ fontSize: 12.5, lineHeight: 1.55, marginBottom: 6, color: "#B8B2A4" }}>
+            <span style={{ color: "#3A5A7A", marginRight: 8, ...mono, fontSize: 10 }}>§</span>{line}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: "16px 20px 20px", borderTop: "1px solid #1E2D3D", textAlign: "center" }}>
+        <div style={{ ...mono, fontSize: 10, letterSpacing: "0.22em", color: "#4A7FA5" }}>— END OF DEMO —</div>
+        <div style={{ fontSize: 11, color: "#667788", marginTop: 6, fontStyle: "italic" }}>Two years down. Six to go. Use NEW GAME up top to run it back differently.</div>
       </div>
     </div>
   );
