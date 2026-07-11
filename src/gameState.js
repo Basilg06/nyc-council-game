@@ -47,6 +47,7 @@ export const initialState = {
     govWinner: null,
     metTisch: false,
     askedAboutPBA: false,
+    pressArchive: [],
   },
   council: buildCouncil(),
   influence: {

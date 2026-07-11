@@ -6,4 +6,5 @@ export const CHARACTERS = {
   trump:  { name: "Pres. Donald Trump",           role: "President of the United States",           color: "#6E1F1F",  avatar: "/avatars/trump.png" },
   hudson: { name: "Crystal Hudson",               role: "NYC Council Speaker",                      color: "#7B4FA3",  avatar: "/avatars/hudson.png" },
   menin:  { name: "Julie Menin",                  role: "NYC Council Speaker",                      color: "#2E3F8F" },
+  vasquez:{ name: "Comm. Elena Vasquez",          role: "NYPD Police Commissioner",                 color: "#D9C76B" },
 };

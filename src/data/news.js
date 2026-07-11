@@ -18,6 +18,7 @@ export function getHeadlines(s) {
   // ── Endgame (loudest of all) ──
   if (f.endgame === "spared")   h.push("OPERATION SAFEGUARD STANDS DOWN — WHITE HOUSE: 'THE MAYOR AND I HAVE AN UNDERSTANDING'");
   if (f.endgame === "stand")    h.push("NYPD REFUSES FEDERAL TASK FORCE — TISCH: 'THIS DEPARTMENT ANSWERS TO CITY HALL'");
+  if (f.endgame === "stand_new") h.push("VASQUEZ, FOUR MONTHS IN, DEFIES WASHINGTON: 'I DON'T WORK FOR DHS'");
   if (f.endgame === "middle")   h.push("FEDERAL RAIDS BEGIN — CITY SUES IN SOUTHERN DISTRICT");
   if (f.endgame === "betrayed") h.push("PBA WELCOMES FEDERAL TASK FORCE — CITY HALL 'ON ITS OWN'");
 
@@ -27,6 +28,7 @@ export function getHeadlines(s) {
   if (f.strike2026 === "negotiated") h.push("BLUE FLU ENDS IN SETTLEMENT — PBA GETS SEAT AT COMMISSIONER SEARCH");
   if (f.strike2026 === "waited")     h.push("SICK-OUT FADES AFTER 11 DAYS — NOTHING RESOLVED, EVERYTHING NOTED");
   if (f.strikeBomb) h.push("PROPERTY CLERK WAREHOUSE EXPLOSION: NO ARRESTS, NO CLAIMS, FOUR CASES GUTTED");
+  if (f.newCommissioner && !f.endgame) h.push("VASQUEZ SWORN IN AT ONE POLICE PLAZA — INTERIM ERA ENDS");
   if (f.controlBoard) h.push("ALBANY CONTROL BOARD ASSUMES CITY BUDGET OVERSIGHT — FIRST SINCE 1975");
 
   // ── Crisis + federal arcs (loudest first) ──

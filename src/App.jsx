@@ -9,6 +9,7 @@ import Legend from "./components/Legend";
 import CaseFile from "./components/CaseFile";
 import SceneView from "./components/SceneView";
 import NewsTicker from "./components/NewsTicker";
+import PressArchive from "./components/PressArchive";
 import styles from "./styles";
 
 function useDrag() {
@@ -50,11 +51,15 @@ export default function App() {
   const saved = loadSave();
   const [state, setState] = useState(saved ? { ...initialState, ...saved.state } : initialState);
   const [sceneId, setSceneId] = useState(saved?.sceneId ?? "intro");
+  const [mapPeek, setMapPeek] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify({ state, sceneId })); } catch {}
   }, [state, sceneId]);
+
+  useEffect(() => { setMapPeek(false); }, [sceneId]);
 
   function goTo(id, effect) {
     if (effect) setState((prev) => { const next = structuredClone(prev); effect(next); return next; });
@@ -84,7 +89,7 @@ export default function App() {
 
   return (
     <div style={styles.appShell}>
-      <TopBar month={state.monthLabel} monthNum={state.month} year={state.year} onNewGame={newGame} />
+      <TopBar month={state.monthLabel} monthNum={state.month} year={state.year} onNewGame={newGame} onOpenLedger={() => setShowLedger(true)} ledgerCount={(state.flags.pressArchive || []).length} />
 
       <div style={styles.mapStage}>
         <DistrictMap council={state.council} />
@@ -125,13 +130,25 @@ export default function App() {
         )}
       </div>
 
-      {!isChamber && !isTimePass && !isHub && !isPhoneCall && (
+      {!isChamber && !isTimePass && !isHub && !isPhoneCall && !mapPeek && (
         <div style={styles.sceneOverlay}>
           <div key={sceneId} className="cg-scene-in" style={styles.sceneOverlayInner}>
-            <SceneView state={state} sceneId={sceneId} goTo={goTo} updateState={updateState} />
+            <SceneView state={state} sceneId={sceneId} goTo={goTo} updateState={updateState} onMapPeek={() => setMapPeek(true)} />
           </div>
         </div>
       )}
+
+      {mapPeek && (
+        <button
+          className="cg-btn"
+          onClick={() => setMapPeek(false)}
+          style={{ position: "fixed", top: 78, left: "50%", transform: "translateX(-50%)", zIndex: 60, background: "rgba(5,8,14,0.92)", color: "#7BBFE8", border: "1px solid #2E5080", borderRadius: 3, padding: "10px 22px", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", cursor: "pointer" }}
+        >
+          ↩ BACK TO THE REPORT
+        </button>
+      )}
+
+      {showLedger && <PressArchive state={state} onClose={() => setShowLedger(false)} />}
 
     </div>
   );

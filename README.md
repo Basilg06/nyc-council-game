@@ -11,7 +11,7 @@ npm run dev
 
 **Year One — 2026:** inauguration calls (Hochul, Trump, Tisch) → Speaker race (back Menin, Hudson, or Carr; whip votes bloc by bloc) → three-round budget fight → governor's primary and general (endorse and campaign).
 
-**Year Two — 2027:** a crisis that depends on your Year 1 budget (deferred capital → BQE collapse; otherwise a blizzard) → federal funding showdown with the White House → the Speaker calls in a favor → summer hub actions → October surprise scandal → **council elections across all 51 districts** → year-end report card.
+**Year Two — 2027:** the Mayor's desk — three events taken in any order (a crisis that depends on your Year 1 budget, a federal funding showdown with the White House, the Speaker calling in a favor) → the FY28 budget call → summer hub actions → October surprise scandal → **council elections across all 51 districts** → Operation Safeguard endgame → year-end report card.
 
 ## Architecture
 
@@ -25,16 +25,17 @@ Everything flows through `src/data/scenes.js` — a flat map of scene objects ke
 | `budget_round` | SceneView → BudgetRoundScene | one pick per round |
 | `hub` | App → HubMapOverlay | map pins, N of M actions |
 | `time_pass` | App → TimePassOverlay | ADVANCE TIME gate + month ticker |
-| `report` | SceneView → ReportScene | end-of-year report card |
+| `report` | SceneView → ReportScene | end-of-year report card (+ map peek) |
 | `newspaper` | SceneView → NewspaperScene | The New York Ledger front page between chapters |
+| `office` | SceneView → OfficeScene | the Mayor's desk — an inbox of events the player takes in any order; advance unlocks when all are handled |
 
 Scene conventions:
 - `lines` entries can be strings or `(state) => string` functions — use functions for anything that references earlier choices.
 - `choices` support `show(state)` (hidden when false), `available(state)` + `tooltip` (visible but disabled), `effect(state)` (mutates a `structuredClone` draft), and `next`.
 - Phone calls support `turns: [{ lines, choices }, ...]` for multi-exchange conversations in one panel. A choice **without** `next` advances to the next turn; a choice **with** `next` ends the call via CONTINUE. `speaker` can be a function of state (used for the sitting Speaker).
 - `decline` on a phone call adds a DECLINE button on the ringing screen.
-- `consult: { label, text }` on a dialogue adds an optional "ask the room" button that reveals the political shop's read before you choose. `text` can be a function of state.
-- `newspaper` scenes take `stories: [{ headline, body }]` (functions of state allowed; a null headline drops the story) — the first is the lead, the rest are secondary, and the sidebar auto-fills from `getHeadlines`.
+- `newspaper` scenes take `stories: [{ headline, body }]` (functions of state allowed; a null headline drops the story) — the first is the lead, the rest are secondary, and the sidebar auto-fills from `getHeadlines`. On continue, the resolved edition is snapshotted into `flags.pressArchive`, readable anytime from the 🗞 LEDGER button in the top bar.
+- `office` scenes take `inbox: [{ id, label, desc, next, effect?, done, show? }]` — `done(state)` marks an item handled (use the flag the event sets), `next` can be a function of state, and the advance button stays locked until the inbox is clear.
 
 ## The election engine (`src/data/elections.js`)
 

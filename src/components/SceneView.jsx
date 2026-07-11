@@ -6,7 +6,7 @@ import { applyInfluenceShiftsMut } from "../data/elections";
 import { getHeadlines } from "../data/news";
 import styles from "../styles";
 
-export default function SceneView({ state, sceneId, goTo, updateState }) {
+export default function SceneView({ state, sceneId, goTo, updateState, onMapPeek }) {
   const scene = SCENES[sceneId];
   if (!scene) {
     return (
@@ -31,10 +31,13 @@ export default function SceneView({ state, sceneId, goTo, updateState }) {
     return <PhoneCallScene key={sceneId} scene={scene} state={state} goTo={goTo} />;
   }
   if (scene.type === "report") {
-    return <ReportScene scene={scene} state={state} />;
+    return <ReportScene scene={scene} state={state} onMapPeek={onMapPeek} />;
   }
   if (scene.type === "newspaper") {
     return <NewspaperScene scene={scene} state={state} goTo={goTo} />;
+  }
+  if (scene.type === "office") {
+    return <OfficeScene scene={scene} state={state} goTo={goTo} />;
   }
   return <DialogueScene scene={scene} state={state} goTo={goTo} />;
 }
@@ -213,13 +216,9 @@ function PhoneCallChat({ c, scene, state, choices, goTo }) {
 }
 
 function DialogueScene({ scene, state, goTo }) {
-  const [consulted, setConsulted] = useState(false);
   const c = CHARACTERS[scene.speaker];
   const choices = (scene.choices || []).filter((ch) => !ch.show || ch.show(state));
   const headerBg = scene.urgent ? "#8B1A1A" : c.color;
-  const consultText = scene.consult
-    ? (typeof scene.consult.text === "function" ? scene.consult.text(state) : scene.consult.text)
-    : null;
   return (
     <div style={styles.sceneCard}>
       <div style={{ ...styles.speakerTag, background: headerBg }}>
@@ -232,24 +231,6 @@ function DialogueScene({ scene, state, goTo }) {
           return <p key={i} style={styles.line}>{text}</p>;
         })}
       </div>
-      {scene.consult && (
-        <div style={{ padding: "0 24px 4px" }}>
-          {consulted ? (
-            <div style={{ background: "#F0EBDC", borderLeft: "3px solid #C9A227", padding: "12px 16px", fontSize: 13.5, fontStyle: "italic", color: "#4A4438", lineHeight: 1.6, animation: "sceneIn 0.25s ease both" }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8.5, letterSpacing: "0.14em", color: "#9A8A50", marginBottom: 6, fontStyle: "normal" }}>THE POLITICAL SHOP'S READ</div>
-              {consultText}
-            </div>
-          ) : (
-            <button
-              className="cg-btn"
-              onClick={() => setConsulted(true)}
-              style={{ width: "100%", background: "transparent", border: "1px dashed #B8AE90", borderRadius: 3, padding: "9px 14px", fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: "#8A7E60", cursor: "pointer", textAlign: "center" }}
-            >
-              ☰ {scene.consult.label || "ASK THE ROOM"}
-            </button>
-          )}
-        </div>
-      )}
       <div style={styles.choiceList}>
         {choices.map((ch, i) => {
             const unavailable = ch.available ? !ch.available(state) : false;
@@ -482,7 +463,7 @@ function BudgetRoundScene({ scene, state, goTo }) {
       </div>
 
       <div style={styles.transcriptText}>
-        <p style={styles.line}>{scene.prompt}</p>
+        <p style={styles.line}>{typeof scene.prompt === "function" ? scene.prompt(state) : scene.prompt}</p>
       </div>
 
       <div style={{ padding: "0 20px 8px" }}>
@@ -629,6 +610,61 @@ function GroupNeg({ group, state, updateState, onBack }) {
   );
 }
 
+function OfficeScene({ scene, state, goTo }) {
+  const resolve = (v) => (typeof v === "function" ? v(state) : v);
+  const items = scene.inbox.filter((it) => !it.show || it.show(state));
+  const allDone = items.every((it) => it.done(state));
+  const mono = { fontFamily: "'Space Mono', monospace" };
+
+  return (
+    <div style={{ ...styles.sceneCard, background: "#0D1117", border: "1px solid #1E2D3D", color: "#C8C2B4" }}>
+      <div style={{ padding: "18px 20px 12px", borderBottom: "1px solid #1E2D3D" }}>
+        <div style={{ ...mono, fontSize: 9, color: "#4A7FA5", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 5 }}>
+          THE MAYOR'S DESK — {scene.month}
+        </div>
+        <div style={{ fontSize: 13, color: "#C8C0A8", lineHeight: 1.5 }}>{scene.headline}</div>
+      </div>
+
+      <div style={{ padding: "6px 0" }}>
+        {items.map((it) => {
+          const done = it.done(state);
+          return (
+            <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 20px", borderBottom: "1px solid #131C28", opacity: done ? 0.55 : 1 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: done ? "#3A7D55" : "#C9A227", boxShadow: done ? "none" : "0 0 8px rgba(201,162,39,0.5)" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: done ? "#7A8A7A" : "#DCE8F5", lineHeight: 1.3 }}>{resolve(it.label)}</div>
+                <div style={{ fontSize: 11, color: "#66788A", marginTop: 3, lineHeight: 1.45 }}>{resolve(it.desc)}</div>
+              </div>
+              {done ? (
+                <span style={{ ...mono, fontSize: 9, letterSpacing: "0.1em", color: "#3A7D55", fontWeight: 700, flexShrink: 0 }}>HANDLED</span>
+              ) : (
+                <button
+                  className="cg-btn"
+                  onClick={() => goTo(resolve(it.next), it.effect)}
+                  style={{ flexShrink: 0, background: "#1C3050", color: "#7BBFE8", border: "1px solid #2E5080", borderRadius: 3, padding: "8px 14px", ...mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", cursor: "pointer" }}
+                >
+                  TAKE IT →
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ padding: "14px 20px 18px" }}>
+        <button
+          className="cg-btn"
+          disabled={!allDone}
+          onClick={() => goTo(scene.next, scene.nextEffect)}
+          style={{ ...styles.submitBtn, width: "100%", textAlign: "center", background: allDone ? "#2D5C3E" : "#1A2430", color: allDone ? "#FFFDF8" : "#556677", cursor: allDone ? "pointer" : "not-allowed" }}
+        >
+          {allDone ? `${scene.nextLabel} →` : `${items.filter((it) => !it.done(state)).length} ITEM${items.filter((it) => !it.done(state)).length !== 1 ? "S" : ""} STILL ON THE DESK`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function NewspaperScene({ scene, state, goTo }) {
   const resolve = (v) => (typeof v === "function" ? v(state) : v);
   const stories = scene.stories.map((st) => ({
@@ -639,6 +675,16 @@ function NewspaperScene({ scene, state, goTo }) {
   const briefs = getHeadlines(state).slice(0, 4);
   const serif = { fontFamily: "'Lora', Georgia, serif" };
   const mono = { fontFamily: "'Space Mono', monospace" };
+
+  function putDown() {
+    // Snapshot the resolved edition into the press archive before moving on.
+    const edition = { date: `${state.monthLabel} ${state.year}`, stories, briefs };
+    goTo(scene.next, (s) => {
+      if (scene.nextEffect) scene.nextEffect(s);
+      if (!s.flags.pressArchive) s.flags.pressArchive = [];
+      s.flags.pressArchive.push(edition);
+    });
+  }
 
   return (
     <div style={{ background: "#F2EDDE", color: "#1A1810", border: "1px solid #C8BFA4", borderRadius: 2, boxShadow: "0 8px 30px rgba(0,0,0,0.5)", overflow: "hidden" }}>
@@ -687,7 +733,7 @@ function NewspaperScene({ scene, state, goTo }) {
       <div style={{ padding: "0 26px 20px" }}>
         <button
           className="cg-btn"
-          onClick={() => goTo(scene.next, scene.nextEffect)}
+          onClick={putDown}
           style={{ width: "100%", background: "#1A1810", color: "#F2EDDE", border: "none", borderRadius: 2, padding: "12px 0", ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", cursor: "pointer" }}
         >
           {scene.nextLabel || "PUT THE PAPER DOWN"} →
@@ -697,7 +743,7 @@ function NewspaperScene({ scene, state, goTo }) {
   );
 }
 
-function ReportScene({ scene, state }) {
+function ReportScene({ scene, state, onMapPeek }) {
   const f = state.flags;
   const b = state.resources.budget;
 
@@ -718,7 +764,7 @@ function ReportScene({ scene, state }) {
   if (demSeats >= 38) score += 2; else if (demSeats >= 33) score += 1;
   if (f.crisis2027 === "bqe_repaired" || f.crisis2027 === "blizzard_hero") score += 1;
   if (f.fedThreat === "defied" || f.fedThreat === "negotiated") score += 1;
-  if (f.endgame === "spared" || f.endgame === "stand") score += 1;
+  if (f.endgame === "spared" || f.endgame === "stand" || f.endgame === "stand_new") score += 1;
   if (f.endgame === "betrayed") score -= 2;
   if (f.controlBoard) score -= 2;
   score = Math.max(0, score);
@@ -762,8 +808,10 @@ function ReportScene({ scene, state }) {
     const n = f.election2027.flips.length;
     ledger.push(n > 0 ? `The 2027 council election flipped ${n} seat${n !== 1 ? "s" : ""}.` : "Every council coalition held its ground in November.");
   }
+  if (f.newCommissioner) ledger.push("Commissioner Vasquez took the oath in June — the interim era ended on your terms.");
   if (f.endgame === "spared")   ledger.push("Operation Safeguard never crossed the river. The President called it off — for you.");
   if (f.endgame === "stand")    ledger.push("When the feds staged across the Hudson, Commissioner Tisch and 34,000 officers stood with City Hall.");
+  if (f.endgame === "stand_new") ledger.push("Four months into the job, Commissioner Vasquez held the department against Washington. It wasn't pretty. It held.");
   if (f.endgame === "middle")   ledger.push("Federal agents are in the city. The lawyers are fighting them block by block.");
   if (f.endgame === "betrayed") ledger.push("The NYPD sided with the federal task force against you. The city is occupied, and the guides are local.");
 
@@ -771,7 +819,7 @@ function ReportScene({ scene, state }) {
     ["Gov. relations", state.figures.hochul.approval],
     ["White House", state.figures.trump.approval],
     ["The Speaker", state.figures.speaker.approval],
-    [f.firedTisch ? "Tisch (fired)" : "NYPD Comm.", state.figures.tisch.approval],
+    [f.newCommissioner ? "Comm. Vasquez" : f.firedTisch ? "Tisch (fired)" : "NYPD Comm.", state.figures.tisch.approval],
     ["PBA", state.groups.pba.approval],
   ];
 
@@ -839,7 +887,17 @@ function ReportScene({ scene, state }) {
         ))}
       </div>
 
-      <div style={{ padding: "16px 20px 20px", borderTop: "1px solid #1E2D3D", textAlign: "center" }}>
+      <div style={{ padding: "14px 20px 8px", borderTop: "1px solid #1E2D3D" }}>
+        <button
+          className="cg-btn"
+          onClick={onMapPeek}
+          style={{ width: "100%", background: "transparent", border: "1px solid #2E5080", borderRadius: 3, padding: "11px 0", ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#7BBFE8", cursor: "pointer" }}
+        >
+          SURVEY THE CITY — SEE THE MAP YOU MADE →
+        </button>
+      </div>
+
+      <div style={{ padding: "12px 20px 20px", textAlign: "center" }}>
         <div style={{ ...mono, fontSize: 10, letterSpacing: "0.22em", color: "#4A7FA5" }}>— END OF DEMO —</div>
         <div style={{ fontSize: 11, color: "#667788", marginTop: 6, fontStyle: "italic" }}>Two years down. Six to go. Use NEW GAME up top to run it back differently.</div>
       </div>
