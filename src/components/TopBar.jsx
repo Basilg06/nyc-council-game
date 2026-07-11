@@ -1,6 +1,6 @@
 import styles from "../styles";
 
-export default function TopBar({ month, monthNum, onNewGame }) {
+export default function TopBar({ month, monthNum, year, onNewGame }) {
   return (
     <div style={styles.topBar}>
       <div style={styles.seal}>★</div>
@@ -12,7 +12,7 @@ export default function TopBar({ month, monthNum, onNewGame }) {
         NEW GAME
       </button>
       <div style={styles.monthChip}>
-        <div style={styles.monthChipName}>{month}</div>
+        <div style={styles.monthChipName}>{month}{year ? ` ${year}` : ""}</div>
       </div>
     </div>
   );

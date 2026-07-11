@@ -84,7 +84,7 @@ export default function App() {
 
   return (
     <div style={styles.appShell}>
-      <TopBar month={state.monthLabel} monthNum={state.month} onNewGame={newGame} />
+      <TopBar month={state.monthLabel} monthNum={state.month} year={state.year} onNewGame={newGame} />
 
       <div style={styles.mapStage}>
         <DistrictMap council={state.council} />

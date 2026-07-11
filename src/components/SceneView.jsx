@@ -641,6 +641,12 @@ function ReportScene({ scene, state }) {
   if (f.fedThreat === "defied")     ledger.push("You defied the White House on immigration. Federal grants are frozen.");
   if (f.fedThreat === "negotiated") ledger.push("You cut a quiet deal with Washington. The left hasn't forgiven it.");
   if (f.fedThreat === "declined")   ledger.push("You declined the President's call. He noticed.");
+  if (f.scandal2027 === "fired")    ledger.push("Ticket-gate: you fired your own commissioner at a four o'clock podium. Swift.");
+  if (f.scandal2027 === "stood_by") ledger.push("Ticket-gate: the investigation you ordered is still open. So is the wound.");
+  if (f.scandal2027 === "quiet")    ledger.push("Ticket-gate: handled quietly on a Friday night. The press remembers.");
+  if (f.speakerBill === "rtc_backed") ledger.push("Right to Counsel passed with your budget certification.");
+  if (f.speakerBill === "sbr_backed") ledger.push("The small business relief package passed with your OMB's blessing.");
+  if (f.speakerBill === "blocked")    ledger.push("You blocked the Speaker's signature bill. The Council keeps receipts.");
   if (f.deferredPension) ledger.push("The pension reclassification is still ticking. Year three will find it.");
   if (f.issuedBonds)     ledger.push("The emergency bonds closed one gap and opened another — debt service starts now.");
   if (f.election2027) {

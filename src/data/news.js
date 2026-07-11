@@ -27,6 +27,10 @@ export function getHeadlines(s) {
   if (f.fedThreat === "negotiated") h.push("QUIET DEAL WITH WASHINGTON RAISES QUESTIONS ON THE LEFT");
   if (f.fedThreat === "declined")   h.push("MAYOR DECLINES PRESIDENT'S CALL — WEST WING 'TAKING NOTES'");
 
+  if (f.scandal2027 === "fired")    h.push("BUILDINGS COMMISSIONER OUT SAME DAY AS TICKET-GATE STORY");
+  if (f.scandal2027 === "stood_by") h.push("TICKET-GATE INVESTIGATION DRAGS ON — CANDIDATES POUNCE");
+  if (f.scandal2027 === "quiet")    h.push("FRIDAY-NIGHT RESIGNATION RAISES 'WHAT ELSE?' QUESTIONS");
+
   if (f.election2027) {
     const n = f.election2027.flips.length;
     h.push(n > 0 ? `COUNCIL SHAKEUP: ${n} SEAT${n !== 1 ? "S" : ""} CHANGE HANDS` : "COUNCIL MAP HOLDS — EVERY COALITION DEFENDS ITS GROUND");

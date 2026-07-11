@@ -3,6 +3,7 @@ import { buildCouncil } from "./data/council";
 export const initialState = {
   month: 1,
   monthLabel: "January",
+  year: 2026,
   resources: { budget: -12, favorHochul: false },
   figures: {
     hochul:  { name: "Gov. Kathy Hochul",        role: "Governor — Democrat",              color: "#2E3F8F", approval: 40, popularity: 55 },
