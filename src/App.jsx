@@ -117,7 +117,7 @@ export default function App() {
         )}
 
         {isHub && (
-          <HubMapOverlay scene={scene} goTo={goTo} updateState={updateState} isMobile={isMobile} />
+          <HubMapOverlay scene={scene} state={state} goTo={goTo} updateState={updateState} isMobile={isMobile} />
         )}
 
         {isPhoneCall && (
@@ -239,11 +239,12 @@ function TimePassOverlay({ scene, goTo, updateState }) {
   );
 }
 
-function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
+function HubMapOverlay({ scene, state, goTo, updateState, isMobile }) {
   const [taken, setTaken] = useState([]);
   const [pending, setPending] = useState(null);
   const infoDrag = useDrag();
   const confirmDrag = useDrag();
+  const actions = scene.actions.filter((a) => !a.show || a.show(state));
   const slotsLeft = scene.maxActions - taken.length;
   const pinR = isMobile ? 20 : 14;
   const dotR = isMobile ? 6 : 4;
@@ -266,7 +267,7 @@ function HubMapOverlay({ scene, goTo, updateState, isMobile }) {
       >
         <rect width="900" height="900" fill="rgba(5,8,14,0.42)" />
 
-        {scene.actions.map((action) => {
+        {actions.map((action) => {
           const done = taken.includes(action.id);
           const blocked = !done && slotsLeft === 0;
           const isPending = pending?.id === action.id;

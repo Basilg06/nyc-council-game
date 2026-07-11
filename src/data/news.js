@@ -15,6 +15,20 @@ export function getHeadlines(s) {
   const f = s.flags;
   const b = s.resources.budget;
 
+  // ── Endgame (loudest of all) ──
+  if (f.endgame === "spared")   h.push("OPERATION SAFEGUARD STANDS DOWN — WHITE HOUSE: 'THE MAYOR AND I HAVE AN UNDERSTANDING'");
+  if (f.endgame === "stand")    h.push("NYPD REFUSES FEDERAL TASK FORCE — TISCH: 'THIS DEPARTMENT ANSWERS TO CITY HALL'");
+  if (f.endgame === "middle")   h.push("FEDERAL RAIDS BEGIN — CITY SUES IN SOUTHERN DISTRICT");
+  if (f.endgame === "betrayed") h.push("PBA WELCOMES FEDERAL TASK FORCE — CITY HALL 'ON ITS OWN'");
+
+  // ── Police crisis arc ──
+  if (f.firedTisch && !f.strike2026) h.push("TISCH OUT: COMMISSIONER FIRED IN ADMINISTRATION'S FIRST WEEK");
+  if (f.strike2026 === "crackdown")  h.push("TAYLOR LAW TERMINATIONS BEGIN AS 'BLUE FLU' ENTERS SECOND WEEK");
+  if (f.strike2026 === "negotiated") h.push("BLUE FLU ENDS IN SETTLEMENT — PBA GETS SEAT AT COMMISSIONER SEARCH");
+  if (f.strike2026 === "waited")     h.push("SICK-OUT FADES AFTER 11 DAYS — NOTHING RESOLVED, EVERYTHING NOTED");
+  if (f.strikeBomb) h.push("PROPERTY CLERK WAREHOUSE EXPLOSION: NO ARRESTS, NO CLAIMS, FOUR CASES GUTTED");
+  if (f.controlBoard) h.push("ALBANY CONTROL BOARD ASSUMES CITY BUDGET OVERSIGHT — FIRST SINCE 1975");
+
   // ── Crisis + federal arcs (loudest first) ──
   if (f.crisis2027 === "bqe_repaired")   h.push("BQE EMERGENCY REPAIR COMPLETE — ENGINEERS CREDIT FAST RESPONSE");
   if (f.crisis2027 === "bqe_patched")    h.push("BQE 'TEMPORARY' SHORING ENTERS FOURTH MONTH");

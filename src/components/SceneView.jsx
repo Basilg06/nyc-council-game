@@ -621,12 +621,24 @@ function ReportScene({ scene, state }) {
   if (demSeats >= 38) score += 2; else if (demSeats >= 33) score += 1;
   if (f.crisis2027 === "bqe_repaired" || f.crisis2027 === "blizzard_hero") score += 1;
   if (f.fedThreat === "defied" || f.fedThreat === "negotiated") score += 1;
+  if (f.endgame === "spared" || f.endgame === "stand") score += 1;
+  if (f.endgame === "betrayed") score -= 2;
+  if (f.controlBoard) score -= 2;
+  score = Math.max(0, score);
   const GRADES = ["F", "D", "C", "C+", "B", "B+", "A-", "A", "A+"];
   const grade = GRADES[Math.min(score, GRADES.length - 1)];
   const gradeColor = score >= 6 ? "#2D5C3E" : score >= 3 ? "#C9A227" : "#8B1A1A";
 
   // Ledger
   const ledger = [];
+  if (f.firedTisch) ledger.push("You fired Commissioner Tisch in your first week. Everything after followed from that.");
+  if (f.strike2026 === "crackdown")  ledger.push("The blue flu was broken with terminations. The department came back to work — not to you.");
+  if (f.strike2026 === "negotiated") ledger.push("You settled the blue flu at the table. It cost budget and face, and bought back the patrol force.");
+  if (f.strike2026 === "waited")     ledger.push("You waited out the blue flu. Eleven days the city won't forget.");
+  if (f.strikeBomb === "blamed")  ledger.push("The warehouse bombing is unsolved. Your accusation against the union is on tape.");
+  if (f.strikeBomb === "calm")    ledger.push("The warehouse bombing is unsolved. Your restraint was noted in the locker rooms.");
+  if (f.strikeBomb === "federal") ledger.push("The FBI holds the warehouse case. Asking was its own message.");
+  if (f.controlBoard) ledger.push("A Financial Control Board runs the city's books. Albany holds the pen.");
   if (f.speakerElected) ledger.push(`Speaker ${f.speakerElected === "hudson" ? "Hudson" : "Menin"} runs the Council${(f.backedHudson && f.speakerElected === "hudson") || (f.backedMenin && f.speakerElected === "menin") ? " — and owes you for it" : ""}.`);
   if (f.govWinner) {
     const g = { hochul: "Hochul held Albany", delgado: "Delgado took Albany", salazar: "Salazar took Albany", blakeman: "Blakeman took Albany for the GOP" }[f.govWinner];
@@ -653,12 +665,17 @@ function ReportScene({ scene, state }) {
     const n = f.election2027.flips.length;
     ledger.push(n > 0 ? `The 2027 council election flipped ${n} seat${n !== 1 ? "s" : ""}.` : "Every council coalition held its ground in November.");
   }
+  if (f.endgame === "spared")   ledger.push("Operation Safeguard never crossed the river. The President called it off — for you.");
+  if (f.endgame === "stand")    ledger.push("When the feds staged across the Hudson, Commissioner Tisch and 34,000 officers stood with City Hall.");
+  if (f.endgame === "middle")   ledger.push("Federal agents are in the city. The lawyers are fighting them block by block.");
+  if (f.endgame === "betrayed") ledger.push("The NYPD sided with the federal task force against you. The city is occupied, and the guides are local.");
 
   const relRows = [
     ["Gov. relations", state.figures.hochul.approval],
     ["White House", state.figures.trump.approval],
     ["The Speaker", state.figures.speaker.approval],
-    ["NYPD Comm.", state.figures.tisch.approval],
+    [f.firedTisch ? "Tisch (fired)" : "NYPD Comm.", state.figures.tisch.approval],
+    ["PBA", state.groups.pba.approval],
   ];
 
   const mono = { fontFamily: "'Space Mono', monospace" };
@@ -735,6 +752,7 @@ function ReportScene({ scene, state }) {
 
 function HubScene({ scene, state, goTo, updateState }) {
   const [taken, setTaken] = useState([]);
+  const actions = scene.actions.filter((a) => !a.show || a.show(state));
   const slotsLeft = scene.maxActions - taken.length;
 
   function take(action) {
@@ -766,7 +784,7 @@ function HubScene({ scene, state, goTo, updateState }) {
           </span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {scene.actions.map((action) => {
+          {actions.map((action) => {
             const done = taken.includes(action.id);
             const blocked = !done && slotsLeft === 0;
             const dim = done || blocked;

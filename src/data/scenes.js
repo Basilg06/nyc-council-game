@@ -204,7 +204,157 @@ export const SCENES = {
         effect: (s) => {
           s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval - 3);
         },
-      }
+      },
+      {
+        text: "\"Actually — I want your resignation on my desk tonight.\"",
+        next: "tisch_fired_react",
+        effect: (s) => {
+          s.flags.firedTisch = true;
+          s.figures.tisch.approval = 12;
+          s.figures.tisch.role = "Former NYPD Commissioner";
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 15);
+          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 5);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 6);
+          s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 6);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 4);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 4);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 3);
+        },
+      },
+    ],
+  },
+
+  tisch_fired_react: {
+    type: "dialogue", speaker: "tisch",
+    lines: [
+      '"...Huh."',
+      '"Four months stabilizing this department, and the new administration\'s first act is a beheading. The deputy mayors said you might be reckless. I told them you\'d at least be smart about it."',
+      '"You\'ll have my letter within the hour. And Mr. Mayor — you just swung."',
+      '"Don\'t miss."',
+    ],
+    choices: [
+      { text: "Next order of business.", next: "blue_flu" },
+    ],
+  },
+
+  blue_flu: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "It started on the overnight in the four-eight in the Bronx. By this morning's shift change, sixty-two percent of patrol is out sick citywide.",
+      "The PBA president was on the radio at seven. Quote: 'There's a bug going around. Something about job security.' End quote.",
+      "The Taylor Law makes striking illegal for uniformed officers — so officially, this isn't a strike. It's the flu. Meanwhile response time in Brownsville is forty-one minutes and the tabloids are doing live shots outside empty precinct houses.",
+      "You fired their commissioner. This is the answer. How do you respond?",
+    ],
+    choices: [
+      {
+        text: "Invoke the Taylor Law. Dock pay, suspend the organizers, terminate repeat no-shows.",
+        next: "strike_bombing",
+        effect: (s) => {
+          s.flags.strike2026 = "crackdown";
+          s.approval = Math.max(0, s.approval - 3);
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 12);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 5);
+          s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 6);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 5);
+          s.factionApproval.leftWfp = Math.min(100, s.factionApproval.leftWfp + 3);
+        },
+      },
+      {
+        text: "Bring the PBA to the table. Back pay, and a voice in choosing the next commissioner.",
+        next: "strike_resolution",
+        effect: (s) => {
+          s.flags.strike2026 = "negotiated";
+          s.resources.budget -= 3;
+          s.approval = Math.max(0, s.approval - 4);
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 10);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 3);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
+        },
+      },
+      {
+        text: "No negotiations with an illegal action. Hold the line and wait them out.",
+        next: "strike_resolution",
+        effect: (s) => {
+          s.flags.strike2026 = "waited";
+          s.approval = Math.max(0, s.approval - 6);
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 6);
+          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 3);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 3);
+        },
+      },
+    ],
+  },
+
+  strike_bombing: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "Three nights after the first termination letters went out — 3 AM. An explosion at the Property Clerk's warehouse in Long Island City.",
+      "The building was empty. No one hurt. But the evidence storage for four active corruption cases went up with it — including two against officers you just terminated.",
+      "No one has claimed it. The PBA condemned it 'in the strongest terms' — in the same statement noting that 'morale has never been lower and the city was warned.'",
+      "ATF wants in. The arson squad is already on scene — which means, and I want to be precise about this, the department is investigating itself.",
+    ],
+    choices: [
+      {
+        text: "Go on camera. Put this at the union leadership's feet.",
+        next: "strike_resolution",
+        effect: (s) => {
+          s.flags.strikeBomb = "blamed";
+          s.approval = Math.max(0, s.approval - 2);
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 10);
+          s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 8);
+          s.factionApproval.republican = Math.max(0, s.factionApproval.republican - 4);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 4);
+        },
+      },
+      {
+        text: "Call for calm. Let the investigation work — and say nothing you can't prove.",
+        next: "strike_resolution",
+        effect: (s) => {
+          s.flags.strikeBomb = "calm";
+          s.approval = Math.min(100, s.approval + 2);
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 3);
+        },
+      },
+      {
+        text: "Hand the case to the FBI. The department can't investigate itself.",
+        next: "strike_resolution",
+        effect: (s) => {
+          s.flags.strikeBomb = "federal";
+          s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 4);
+          s.groups.pba.approval = Math.max(0, s.groups.pba.approval - 6);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+        },
+      },
+    ],
+  },
+
+  strike_resolution: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      (s) => {
+        if (s.flags.strike2026 === "negotiated")
+          return "The sick-out ended in six days. The settlement cost you three budget points, a seat at the commissioner search for the union, and — let's be honest — the appearance of control. But the cars are back on patrol.";
+        if (s.flags.strike2026 === "waited")
+          return "Eleven days. Crime stats you don't want to read, a tabloid clock counting 'DAYS WITHOUT A MAYOR IN CONTROL,' and then it just — ended. Cops drifted back. Nothing was resolved. Everything was noted.";
+        // crackdown
+        return s.flags.strikeBomb
+          ? "After nineteen days the sick-out collapsed. The terminations stood. The department came back to work — but make no mistake, it did not come back to you."
+          : "The crackdown broke the sick-out in nineteen days.";
+      },
+      (s) => {
+        if (s.flags.strikeBomb === "blamed")
+          return "The warehouse case is open. Your accusation is on tape, unproven, and playing on a loop in every precinct locker room in the city.";
+        if (s.flags.strikeBomb === "calm")
+          return "The warehouse case is open. Your restraint bought you something with the rank and file — not forgiveness, but something.";
+        if (s.flags.strikeBomb === "federal")
+          return "The FBI took the warehouse case. The White House noticed you asked. So did every cop in the city.";
+        return "The department has an interim commissioner, a grievance list, and a long memory.";
+      },
+      "Now — the Council still needs a Speaker, and that fight didn't pause for any of this.",
+    ],
+    choices: [
+      { text: "Back to work.", next: "swearing_in_week" },
     ],
   },
 
@@ -797,6 +947,16 @@ export const SCENES = {
           s.groups.wfp.approval = Math.max(0, s.groups.wfp.approval - 5);
         },
       },
+      {
+        id: "abstain_r1",
+        label: "Take no action this round",
+        delta: 0,
+        costLabel: "the deficit stands — the Council reads it as drift",
+        available: () => true,
+        effect: (s) => {
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 2);
+        },
+      },
     ],
     next: "budget_round2",
   },
@@ -861,6 +1021,16 @@ export const SCENES = {
           s.factionApproval.farRight = Math.max(0, s.factionApproval.farRight - 4);
         },
       },
+      {
+        id: "abstain_r2",
+        label: "Take no action this round",
+        delta: 0,
+        costLabel: "no new revenue — the gap doesn't close itself",
+        available: () => true,
+        effect: (s) => {
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 2);
+        },
+      },
     ],
     next: "budget_round3",
   },
@@ -918,6 +1088,16 @@ export const SCENES = {
         effect: (s) => {
           s.resources.budget += 3;
           s.flags.deferredPension = true;
+        },
+      },
+      {
+        id: "abstain_r3",
+        label: "Take no action this round",
+        delta: 0,
+        costLabel: "no structural reform — the deficit rides into June",
+        available: () => true,
+        effect: (s) => {
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 2);
         },
       },
     ],
@@ -981,6 +1161,23 @@ export const SCENES = {
         },
       },
       {
+        id: "control_board",
+        label: "Refuse the hard choices — let Albany impose a Financial Control Board",
+        delta: (s) => -s.resources.budget,
+        costLabel: "balances the books by surrendering them — nothing like it since 1975",
+        available: () => true,
+        effect: (s) => {
+          s.resources.budget = 0;
+          s.flags.controlBoard = true;
+          s.approval = Math.max(0, s.approval - 10);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 8);
+          s.factionApproval.centrist = Math.max(0, s.factionApproval.centrist - 5);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 4);
+          s.factionApproval.leftWfp = Math.max(0, s.factionApproval.leftWfp - 4);
+          s.figures.hochul.approval = Math.max(0, s.figures.hochul.approval - 5);
+        },
+      },
+      {
         id: "sell_air_rights",
         label: "Sell city air rights to developers",
         delta: 1,
@@ -1016,6 +1213,7 @@ export const SCENES = {
       },
       (s) => {
         const notes = [];
+        if (s.flags.controlBoard) notes.push("The Control Board balanced the books — and took the keys. Every budget modification now needs Albany's signature.");
         if (s.flags.deferredCapital) notes.push("The deferred capital projects will come back — infrastructure advocates are organizing.");
         if (s.flags.deferredPension) notes.push("The pension reclassification is a ticking clock. Someone will notice in year three.");
         if (s.flags.issuedBonds) notes.push("The bond issuance closes this year's books. Future budgets absorb the debt service.");
@@ -1695,6 +1893,32 @@ export const SCENES = {
           s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 3);
         },
       },
+      {
+        id: "y2_onepp",
+        label: "One Police Plaza summit",
+        show: (s) => !s.flags.firedTisch,
+        location: { x: 415, y: 452, name: "One Police Plaza" },
+        description: "A full day with Tisch and her deputy commissioners on the reform agenda. The Commissioner notices who invests in her.",
+        effect: (s) => {
+          s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 8);
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 4);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 2);
+          s.factionApproval.dsa = Math.max(0, s.factionApproval.dsa - 3);
+        },
+      },
+      {
+        id: "y2_commsearch",
+        label: "Commissioner search",
+        show: (s) => !!s.flags.firedTisch,
+        location: { x: 415, y: 452, name: "One Police Plaza" },
+        description: "Interview finalists for the permanent NYPD Commissioner. The interim arrangement is fooling no one — least of all the department.",
+        effect: (s) => {
+          s.flags.newCommissioner = true;
+          s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 4);
+          s.factionApproval.centrist = Math.min(100, s.factionApproval.centrist + 3);
+          s.factionApproval.establishment = Math.min(100, s.factionApproval.establishment + 2);
+        },
+      },
     ],
   },
 
@@ -1834,8 +2058,147 @@ export const SCENES = {
     choices: [
       {
         text: "The year winds down.",
-        next: "year2_report",
+        next: "federal_endgame",
         effect: (s) => { s.month = 12; s.monthLabel = "December"; },
+      },
+    ],
+  },
+
+  // ═══════════════════ ENDGAME — OPERATION SAFEGUARD ═══════════════════
+
+  federal_endgame: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "One more thing before the year closes. It's not small.",
+      "DHS activated something at 6 AM called Operation Safeguard — a federal task force 'to restore order in New York City.' Six hundred agents. ICE, ATF, Border Patrol tactical units. They're staging at Liberty State Park, across the water, where the cameras can see them.",
+      "The White House hasn't called. The order is signed. Whether those agents cross the river — and what happens when they do — depends on relationships you've been building, or burning, for two years.",
+    ],
+    choices: [
+      {
+        text: "Call the President.",
+        show: (s) => s.figures.trump.approval >= 35,
+        next: "endgame_spared",
+      },
+      {
+        text: "Call One Police Plaza.",
+        show: (s) => s.figures.trump.approval < 35 && !s.flags.firedTisch && s.figures.tisch.approval >= 55,
+        next: "endgame_stand",
+      },
+      {
+        text: "Find out where the NYPD stands.",
+        show: (s) => s.figures.trump.approval < 35 && !!s.flags.firedTisch && s.groups.pba.approval < 35,
+        next: "endgame_betrayed",
+      },
+      {
+        text: "Get ahead of it.",
+        show: (s) =>
+          s.figures.trump.approval < 35 &&
+          !(!s.flags.firedTisch && s.figures.tisch.approval >= 55) &&
+          !(s.flags.firedTisch && s.groups.pba.approval < 35),
+        next: "endgame_middle",
+      },
+    ],
+  },
+
+  endgame_spared: {
+    type: "phone_call", speaker: "trump",
+    turns: [
+      {
+        lines: [
+          '"Relax. I called it off an hour ago."',
+          '"They wanted to do a whole thing. Tanks on the BQE, the works. I said no. Not this city."',
+          '"You\'ve been straight with me. I don\'t forget that. Nobody believes me when I say it, but I don\'t."',
+        ],
+        choices: [
+          {
+            text: '"...Thank you, Mr. President."',
+            next: "year2_report",
+            effect: (s) => {
+              s.flags.endgame = "spared";
+              s.figures.trump.approval = Math.min(100, s.figures.trump.approval + 3);
+            },
+          },
+          {
+            text: '"..."',
+            next: "year2_report",
+            effect: (s) => { s.flags.endgame = "spared"; },
+          },
+        ],
+      },
+    ],
+  },
+
+  endgame_stand: {
+    type: "phone_call", speaker: "tisch",
+    turns: [
+      {
+        lines: [
+          '"Mayor. My counterparts at DHS sent over their operational map an hour ago. They\'re expecting precinct-level cooperation. Access, databases, detainer holds."',
+          '"So I want to be clear about something before the morning briefings."',
+          '"The NYPD takes orders from City Hall. Not from a staging ground in Secaucus. I\'ve instructed every borough commander: no joint operations, no database access, no holds without a judge\'s signature."',
+          '"If Washington wants this city, they can come ask you for it. Thirty-four thousand officers are about to make that conversation very expensive."',
+        ],
+        choices: [
+          {
+            text: '"Thank you, Jess. Whatever you need."',
+            next: "year2_report",
+            effect: (s) => {
+              s.flags.endgame = "stand";
+              s.approval = Math.min(100, s.approval + 5);
+              s.figures.tisch.approval = Math.min(100, s.figures.tisch.approval + 6);
+              s.groups.pba.approval = Math.min(100, s.groups.pba.approval + 4);
+              s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 5);
+              s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 4);
+              s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 4);
+            },
+          },
+        ],
+      },
+    ],
+  },
+
+  endgame_betrayed: {
+    type: "dialogue", speaker: "park", urgent: true,
+    lines: [
+      "The PBA president went on Fox an hour ago. He called the task force — quote — 'the backup this city's cops have been begging for since the firings.'",
+      "Precinct commanders are coordinating with federal teams directly. Gang databases, warrant lists, building access. City Hall found out from a press release.",
+      "The department you decapitated and the union you broke picked a side tonight. It isn't ours. Six hundred agents become six thousand by spring — and every one of them will have an NYPD guide who knows the block.",
+      "There's no version of this where we win the winter. The question is what's still standing by then.",
+    ],
+    choices: [
+      {
+        text: "Endure it.",
+        next: "year2_report",
+        effect: (s) => {
+          s.flags.endgame = "betrayed";
+          s.approval = Math.max(0, s.approval - 8);
+          s.factionApproval.establishment = Math.max(0, s.factionApproval.establishment - 4);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 3);
+        },
+      },
+    ],
+  },
+
+  endgame_middle: {
+    type: "dialogue", speaker: "park",
+    lines: [
+      "The first federal teams crossed at dawn — raids in Corona, East New York, and the Bronx Hub. Forty-one arrests, six of them people with no record at all.",
+      (s) => s.flags.firedTisch
+        ? "The interim commissioner issued a statement so carefully worded it said nothing. The department is neither helping the feds nor stopping them — it's watching, the way you watch a fight you don't have a side in."
+        : "The Commissioner is issuing carefully worded statements — no joint operations, but no interference either. The department is holding the middle, which is more than it might have done.",
+      "Corp counsel filed in the Southern District an hour after the first door came off its hinges. We'll win some of it. Not before spring. Six hundred agents, and the city gets to find out what it's actually made of.",
+    ],
+    choices: [
+      {
+        text: "Fight it in court.",
+        next: "year2_report",
+        effect: (s) => {
+          s.flags.endgame = "middle";
+          s.approval = Math.max(0, s.approval - 4);
+          s.figures.trump.approval = Math.max(0, s.figures.trump.approval - 3);
+          s.factionApproval.dsa = Math.min(100, s.factionApproval.dsa + 2);
+          s.factionApproval.progressive = Math.min(100, s.factionApproval.progressive + 2);
+        },
       },
     ],
   },
