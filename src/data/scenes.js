@@ -1146,7 +1146,7 @@ export const SCENES = {
 
   budget_fight_2026: {
     type: "budget_fight",
-    next: "budget_result",
+    next: (total) => (total < 0 ? "budget_crisis_intro" : "budget_result"),
     rounds: [
       {
     title: "ROUND 1 — ADMINISTRATIVE",
@@ -1347,8 +1347,25 @@ export const SCENES = {
     ],
       },
     ],
-    crisis: {
-      urgent: true,
+  },
+
+  budget_crisis_intro: {
+    type: "interstitial",
+    kicker: "JUNE 30 — CHARTER DEADLINE",
+    title: "The Budget Fails",
+    sub: (s) => `The adopted package leaves a ${Math.abs(s.resources.budget)}-point hole. The Council sends it back within the hour.`,
+    note: "ALBANY IS CALLING · THE BOND DESKS ARE WATCHING",
+    buttonText: "PICK YOUR POISON",
+    next: "budget_crisis_2026",
+  },
+
+  budget_crisis_2026: {
+    type: "budget_fight",
+    next: "budget_result",
+    adoptLabel: "RESOLVE THE CRISIS",
+    rounds: [
+      {
+        urgent: true,
     title: "CRISIS — JUNE DEADLINE",
     prompt: "The Council won't pass an unbalanced budget. Albany is calling. Pick your poison.",
     options: [
@@ -1439,7 +1456,8 @@ export const SCENES = {
         },
       },
     ],
-    },
+      },
+    ],
   },
 
   budget_result: {
